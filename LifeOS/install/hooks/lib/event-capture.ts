@@ -130,7 +130,8 @@ export function ensurePrivateDir(dir: string): void {
   mkdirSync(dir, { recursive: true, mode: PRIVATE_DIR_MODE });
   const mode = statSync(dir).mode & 0o777;
   if (mode & 0o077) chmodSync(dir, mode & PRIVATE_DIR_MODE);
-  invariant((statSync(dir).mode & 0o077) === 0, 'private record directory is owner-only');
+  // POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  if (process.platform !== 'win32') invariant((statSync(dir).mode & 0o077) === 0, 'private record directory is owner-only');
 }
 
 /** appendPrivateLine into a private directory: the file is 0600 and its directory owner-only,
@@ -138,7 +139,8 @@ export function ensurePrivateDir(dir: string): void {
 export function appendPrivateRecord(filePath: string, record: unknown): void {
   ensurePrivateDir(dirname(filePath));
   appendPrivateLine(filePath, record);
-  invariant((statSync(filePath).mode & 0o777) === PRIVATE_MODE, 'private record file is 0600');
+  // POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  if (process.platform !== 'win32') invariant((statSync(filePath).mode & 0o777) === PRIVATE_MODE, 'private record file is 0600');
 }
 
 // ── Settings snapshot diff (ConfigChange) ─────────────────────────────────

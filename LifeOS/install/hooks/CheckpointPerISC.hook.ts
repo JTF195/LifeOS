@@ -334,6 +334,9 @@ export function commitSnapshot(repo: string, subject: string, paths: string[]): 
   try {
     gitIn(repo, head ? ['read-tree', head] : ['read-tree', '--empty'], env);
     const committed: string[] = [];
+    // NTFS has no exec bit (stat reports 0o666): on Windows the mode git already records is kept, so a 100755 file
+    // is not rewritten as 100644 by every checkpoint.
+    const headModes = process.platform === 'win32' ? treeEntries(repo, head, paths) : null;
     for (const rel of paths) {
       const abs = join(repo, rel);
       let st;
@@ -345,7 +348,7 @@ export function commitSnapshot(repo: string, subject: string, paths: string[]): 
       let bytes: Buffer;
       let mode: string;
       if (st.isSymbolicLink()) { bytes = Buffer.from(readlinkSync(abs)); mode = '120000'; }
-      else if (st.isFile()) { bytes = readFileSync(abs); mode = st.mode & 0o111 ? '100755' : '100644'; }
+      else if (st.isFile()) { bytes = readFileSync(abs); mode = headModes ? (headModes.get(rel)?.startsWith('100755 ') ? '100755' : '100644') : st.mode & 0o111 ? '100755' : '100644'; }
       else { console.error(`[CheckpointPerISC] skipping ${rel}: not a file or symlink`); continue; }
       const snap = join(snapDir, 'blob');
       writeFileSync(snap, bytes);

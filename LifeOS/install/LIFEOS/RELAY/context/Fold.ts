@@ -220,7 +220,8 @@ export function ensureContextDir(contextDir: string): void {
   const ignore = join(contextDir, ".gitignore");
   try { writeFileSync(ignore, "*\n", { flag: "wx", mode: 0o600 }); }
   catch (error) { if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error; }
-  invariant((statSync(contextDir).mode & 0o777) === 0o700, `${contextDir} must be owner-only`);
+  // POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  if (process.platform !== "win32") invariant((statSync(contextDir).mode & 0o777) === 0o700, `${contextDir} must be owner-only`);
   invariant(readFileSync(ignore, "utf8").split("\n").includes("*"), `${ignore} must ignore everything`);
 }
 

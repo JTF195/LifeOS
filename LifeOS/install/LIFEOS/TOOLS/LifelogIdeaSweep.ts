@@ -557,7 +557,8 @@ export function writePrivateTemp(day: string, html: string, base: string = tmpdi
   const dir = mkdtempSync(join(base, "lifelog-ideas-"));
   chmodSync(dir, 0o700);
   const st = lstatSync(dir);
-  if (!st.isDirectory() || st.isSymbolicLink() || (st.mode & 0o077) !== 0) {
+  // The mode clause is POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  if (!st.isDirectory() || st.isSymbolicLink() || (process.platform !== "win32" && (st.mode & 0o077) !== 0)) {
     rmSync(dir, { recursive: true, force: true });
     throw new Error("private temp directory is not a private directory; nothing written");
   }

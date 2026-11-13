@@ -1635,7 +1635,8 @@ function checkHookRegistration(): void {
   // registered but file missing → BLOCKING
   for (const r of registered) {
     if (!onDisk.has(r)) findings.push({ detail: `registered in settings.json but file missing: hooks/${r}`, blocking: true });
-    else {
+    // NTFS has no exec bit (stat reports 0o666) and the harness runs hooks through Git Bash; the check would flag every hook there (as in Doctor.ts).
+    else if (process.platform !== 'win32') {
       // registered hooks with a shebang are exec'd directly by the harness — a missing +x bit is a silent no-fire.
       try {
         const st = statSync(join(hooksDir, r));

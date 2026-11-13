@@ -29,7 +29,8 @@ interface ChunkInfo {
 export function makeChunkDir(base: string = tmpdir()): string {
   const dir = mkdtempSync(join(base, "transcript-"));
   chmodSync(dir, 0o700);
-  invariant((lstatSync(dir).mode & 0o777) === 0o700, `chunk dir ${dir} is not owner-only`);
+  // POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  if (process.platform !== "win32") invariant((lstatSync(dir).mode & 0o777) === 0o700, `chunk dir ${dir} is not owner-only`);
   return dir;
 }
 

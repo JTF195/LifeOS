@@ -60,7 +60,8 @@ export function cacheDir(...name: string[]): string {
   try { real = realpathSync(dir); rootReal = realpathSync(root); } catch (e) { throw new Error(`cacheDir: cannot resolve ${dir} (${why(e)})`); }
   if (real !== join(rootReal, ...parts)) throw new Error(`cacheDir: ${dir} resolves to ${real}, outside the checked path; refusing a private cache there`);
   const final = lstatSync(dir);
-  invariant(final.isDirectory() && !final.isSymbolicLink() && (final.mode & 0o777) === 0o700, `cacheDir: ${dir} is not an owner-only directory after setup (mode ${(final.mode & 0o777).toString(8)})`);
+  // The mode clause is POSIX-only: Windows has no mode bits (stat reports 0o666); access there comes from the folder's inherited ACL.
+  invariant(final.isDirectory() && !final.isSymbolicLink() && (process.platform === "win32" || (final.mode & 0o777) === 0o700),`cacheDir: ${dir} is not an owner-only directory after setup (mode ${(final.mode & 0o777).toString(8)})`);
   return dir;
 }
 
