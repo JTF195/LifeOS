@@ -1339,6 +1339,10 @@ function shellQuoteRoot(root: string, state: QuoteState): string {
  */
 export function rewriteHookRoots(hooks: HooksMap, configRoot: string): HooksMap {
   const out: HooksMap = JSON.parse(JSON.stringify(hooks ?? {}));
+  // The default root needs no rewrite: `$HOME/.claude` already names it at fire time, and keeping
+  // the shipped form keeps commands parseable by hookCommandScript (which treats any backslash as
+  // opaque). On Windows the rewrite wrote `C:\\Users\\...` and broke MemoryHealthCheck/LifeosUpgrade.
+  if (isDefaultConfigRoot(configRoot)) return out;
   for (const groups of Object.values(out)) {
     if (!Array.isArray(groups)) continue;
     for (const g of groups) {
@@ -1355,7 +1359,17 @@ const HOME_FORMS = /(?:~|\$HOME|\$\{HOME\})\/\.claude/g;
 
 /** One command with every HOME-relative `.claude` root resolved to `configRoot`, quoted for its shell position. */
 function rewriteHomeRoot(cmd: string, configRoot: string): string {
-  return cmd.replace(HOME_FORMS, (_m, offset: number) => shellQuoteRoot(configRoot, quoteStateAt(cmd, offset)));
+  // Hook commands run through Git Bash on Windows, which accepts `C:/...`; forward slashes keep the
+  // command free of backslashes that quoting would double.
+  const root = process.platform === "win32" ? configRoot.replace(/\\/g, "/") : configRoot;
+  return cmd.replace(HOME_FORMS, (_m, offset: number) => shellQuoteRoot(root, quoteStateAt(cmd, offset)));
+}
+
+/** True when `configRoot` is `<home>/.claude` (the root `$HOME/.claude` already names). */
+function isDefaultConfigRoot(configRoot: string): boolean {
+  const norm = (p: string) => resolve(p).replace(/[\\/]+$/, "").toLowerCase();
+  const homes = [process.env.HOME, homedir()].filter((h): h is string => !!h);
+  return homes.some((h) => norm(join(h, ".claude")) === norm(configRoot));
 }
 
 /**
