@@ -346,7 +346,7 @@ async function buildPayload(): Promise<MenuBarPayload> {
       const o = JSON.parse(line)
       const ts = new Date(o.ts || o.timestamp || Date.now()).getTime()
       const what = o.target_kind || o.kind || o.target_file || "memory write"
-      feed.push({ subsystem: "memory", glyph: "✧", title: `Memory wrote ${String(what).split("/").pop()}`, tsMs: ts, ago: agoFrom(ts), actionable: false })
+      feed.push({ subsystem: "memory", glyph: "✧", title: `Memory wrote ${String(what).split(/[\\/]/).pop()}`, tsMs: ts, ago: agoFrom(ts), actionable: false })
     } catch {
       /* skip */
     }

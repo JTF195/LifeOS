@@ -433,7 +433,7 @@ function parseArgs(argv: string[]): Args {
     else if (argv[i] === "--shard-hash") args.shardHash = argv[++i];
   }
   if (args.shard && args.payload) throw new Error("--shard and --payload are separate modes; pass one");
-  if (args.payload && !args.slug) args.slug = `release-${resolve(args.payload).split("/").filter(Boolean).slice(-2, -1)[0] ?? "unknown"}`;
+  if (args.payload && !args.slug) args.slug = `release-${resolve(args.payload).split(sep).filter(Boolean).slice(-2, -1)[0] ?? "unknown"}`;
   if (!args.slug && !args.shard) throw new Error("--slug required (or --payload <dir> or --shard <dir>)");
   return args as Args;
 }

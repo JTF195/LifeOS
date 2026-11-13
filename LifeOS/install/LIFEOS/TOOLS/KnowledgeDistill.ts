@@ -146,7 +146,7 @@ function parseNote(absPath: string, domain: string): NoteCandidate | null {
     const block = fm.match(/^tags:\s*\n((?:\s+-\s+.*\n?)+)/m);
     if (block) tags = block[1].split("\n").map((l) => l.replace(/^\s+-\s+/, "").trim()).filter(Boolean);
   }
-  const slug = absPath.split("/").pop()!.replace(/\.md$/, "");
+  const slug = absPath.split(/[\\/]/).pop()!.replace(/\.md$/, "");
   const firstLine = body.split("\n").map((l) => l.trim())
     .find((l) => l && !l.startsWith("#") && !l.startsWith(">") && !l.startsWith("<!--")) ?? "";
   return {

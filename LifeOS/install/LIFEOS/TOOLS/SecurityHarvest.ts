@@ -168,6 +168,8 @@ function bashFlags(command: string): string[] {
 
 /** Generic class of a file path: a sensitive kind, or the first tree segments with the home dir stripped. */
 export function pathClass(path: string): string {
+  // The classes below are written for "/" paths: on Windows a native path (home folded to ~ first) is put in that form.
+  if (process.platform === "win32") path = path.replace(HOME_RE, "~").replaceAll("\\", "/");
   for (const [re, name] of SENSITIVE_PATH) if (re.test(path)) return name;
   const p = path.replace(HOME_RE, "~");
   if (p.startsWith("~/.claude/")) {

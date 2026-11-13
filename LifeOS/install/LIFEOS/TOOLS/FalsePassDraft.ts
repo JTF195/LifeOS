@@ -349,7 +349,7 @@ export function fileDraft(draft: EvalDraft, event: MissEvent, deps: FileDeps = {
   const evidence = [token, ...(draft.receipt_id ? [draft.receipt_id] : []), ...(event.type === "false-pass" && event.output_id ? [event.output_id] : []), ...(event.rejection_id ? [event.rejection_id] : []), ...(draft.isa ? [draft.isa] : [])];
   invariant(evidence[0] === token, "the dedupe token is the first evidence entry");
   const res = add({
-    claim: `${event.type === "false-pass" ? "False pass" : "Tournament overrule"} ${draft.key}: add check ${draft.check_id} to ${draft.criterion ?? "the eval"}${draft.isa ? ` in ${draft.isa.split("/").slice(-2).join("/")}` : ""} so this miss fails next time.`,
+    claim: `${event.type === "false-pass" ? "False pass" : "Tournament overrule"} ${draft.key}: add check ${draft.check_id} to ${draft.criterion ?? "the eval"}${draft.isa ? ` in ${draft.isa.split(/[\\/]/).slice(-2).join("/")}` : ""} so this miss fails next time.`,
     source: DRAFT_SOURCE,
     current_state: what,
     recommendation,

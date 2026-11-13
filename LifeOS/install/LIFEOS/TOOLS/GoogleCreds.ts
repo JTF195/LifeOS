@@ -91,7 +91,7 @@ export function resolveGoogleCredsPath(opts: { account?: string | null } = {}): 
   if (found.length === 1) return found[0]!;
 
   const listing = found.length
-    ? `found ${found.length} mailbox credentials, so the choice is ambiguous: ${found.map((f) => f.split("/").pop()).join(", ")}`
+    ? `found ${found.length} mailbox credentials, so the choice is ambiguous: ${found.map((f) => f.split(/[\\/]/).pop()).join(", ")}`
     : `found no mailbox credentials in ${dir}`;
   throw new Error(
     `Google credentials unresolved — ${listing}. ` +

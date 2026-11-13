@@ -20,7 +20,7 @@ for (const __k of ["LIFEOS_DIR", "LIFEOS_CONFIG_DIR", "PROJECTS_DIR"]) {
 
 import { createHash } from "crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import { basename, dirname, join, relative } from "path";
+import { basename, dirname, join, relative, sep } from "path";
 import { homedir } from "node:os";
 import {
   CONTEXT_FRESHNESS_REGISTRY,
@@ -74,7 +74,7 @@ function strippedHash(content: string): string {
 }
 
 function pathRelativeToClaude(path: string): string {
-  return relative(CLAUDE_DIR, path).split("/").join("/");
+  return relative(CLAUDE_DIR, path).split(sep).join("/");
 }
 
 function generatorFor(entry: ContextFile): string | null {

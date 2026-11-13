@@ -21,7 +21,7 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { getClaudeDir } from "../Paths.ts";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 // release-allow: private-skill-names (_VIDEO is the camera-footage pipeline value in STATVS render rows and its producer command; an install without the video pipeline skill never writes or reads such a row)
 export const PIPELINES = ["VideoEssay", "HyperFrames", "StoryFilm", "_VIDEO"] as const;
@@ -65,7 +65,7 @@ export function intentRel(intent: string): string | null {
   const real = realOrResolved(s);
   for (const root of [realOrResolved(CODE_ROOT), realOrResolved(getClaudeDir())]) {
     const rel = relative(root, real);
-    if (rel && !rel.startsWith("..") && !isAbsolute(rel)) return rel;
+    if (rel && !rel.startsWith("..") && !isAbsolute(rel)) return rel.split(sep).join("/");
   }
   return null;
 }

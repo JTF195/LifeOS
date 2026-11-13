@@ -83,7 +83,7 @@ function moveInto(ctx: Ctx, changes: Change[], src: string, destDir: string, lab
   changes.push({ step: "retire", what: "move", detail: `${label}: ${src} → ${destDir}/` });
   if (ctx.check) return;
   mkdirSync(destDir, { recursive: true });
-  const dest = join(destDir, src.split("/").pop()!);
+  const dest = join(destDir, src.split(/[\\/]/).pop()!);
   invariant(!exists(dest), `retire destination already exists: ${dest}`);
   renameSync(src, dest);
 }
@@ -239,7 +239,7 @@ function currentViewKind(viewRoot: string, rel: string, src: string): ViewKind |
  * symlinks to the real tree, so node_modules is found at run time unchanged.
  */
 function ensureSkillView(ctx: Ctx, changes: Change[], dir: string, src: string): void {
-  const name = dir.split("/").pop();
+  const name = dir.split(/[\\/]/).pop();
   const plan = planSkillView(src);
   const drift: string[] = [];
   // 1. everything the plan wants, in the shape it wants

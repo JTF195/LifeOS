@@ -122,7 +122,7 @@ function permissionDetail(input: any): string {
       return `Bash ${cmd.slice(0, 40)}${cmd.length > 40 ? '…' : ''}`;
     }
     if (typeof ti?.file_path === 'string') {
-      const base = ti.file_path.split('/').filter(Boolean).pop();
+      const base = ti.file_path.split(/[\\/]/).filter(Boolean).pop();
       if (base) return `${toolName} ${base}`;
     }
   } catch { /* fall through */ }

@@ -25,7 +25,7 @@
  */
 import { lstatSync as realLstat, readFileSync, readdirSync as realReaddir, realpathSync, statSync as realStat, type Stats } from "node:fs";
 import { homedir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { lifeosDirFor } from "../Paths.ts";
 import { IGNORED_NAMES, TRANSIENT_NAME } from "./ProofKinds.ts";
 
@@ -229,7 +229,7 @@ export function scanDelivery(a: readonly DeliveryRoot[] | ScanOptions, keepArg?:
   const freshTransientScopes = new Set<string>();
   const rootDepthOf = (p: string): number => {
     const r = allRoots.find((x) => p === x.path || p.startsWith(x.path + "/"));
-    return r ? (p === r.path ? 0 : relative(r.path, p).split("/").length) : 0;
+    return r ? (p === r.path ? 0 : relative(r.path, p).split(sep).length) : 0;
   };
 
   type Unit = { path: string; channel: string; started: boolean; incomplete: boolean };

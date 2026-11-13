@@ -154,7 +154,7 @@ function recentReviewerRuns(n: number = 10): Array<{
           const itemMatches = [...txt.matchAll(/\[\d+\]\s+OK\s+(\w+):\s+(\S+)/g)];
           itemPaths = itemMatches.map((im) => ({
             type: im[1]!,
-            file: (im[2]!.split("/").pop() || im[2]!),
+            file: (im[2]!.split(/[\\/]/).pop() || im[2]!),
           }));
         } catch {}
       }

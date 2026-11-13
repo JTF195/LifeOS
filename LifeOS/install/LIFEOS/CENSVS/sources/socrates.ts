@@ -12,7 +12,7 @@ import { clip, compact } from "./common";
 
 /** An isa_ref may be a slug or a path to an ISA.md; either way the ISA's directory names it. */
 function isaKey(ref: string): string {
-  const parts = ref.split("/").filter((p) => p && p !== "ISA.md");
+  const parts = ref.split(/[\\/]/).filter((p) => p && p !== "ISA.md");
   return parts[parts.length - 1] ?? ref;
 }
 

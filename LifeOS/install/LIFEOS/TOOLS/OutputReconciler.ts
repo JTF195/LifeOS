@@ -660,7 +660,7 @@ export function reconcile(opts: Options = {}): Report {
   // Each path the activity log names as a write target (and, in a hand-off root, any path a command mentions) is lstat'ed, never listed.
   const namedPaths = new Set([...writtenPaths, ...activity.strict.keys()]);
   for (const p of namedPaths) {
-    const name = p.split("/").pop() ?? "";
+    const name = p.split(/[\\/]/).pop() ?? "";
     if (filePaths.has(p) || IGNORED_NAMES.has(name) || !candidate(p)) continue;
     try { const st = lstatSync(p); if ((st.isFile() || st.isSymbolicLink()) && !skippable(name, changedOf(st), now.getTime())) { filePaths.add(p); filesFromWrites++; } } catch { /* written then removed: not a delivered file */ }
   }

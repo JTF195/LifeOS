@@ -191,7 +191,7 @@ export async function judgeVideo(file: string, opts: VideoJudgeOpts, deps: Video
   const mimeType = opts.mimeType ?? 'video/mp4';
   let uploaded: string | undefined;
   try {
-    const up = await uploadVideo(file, opts.displayName ?? file.split('/').pop() ?? 'video', key, { mimeType, fetch: f });
+    const up = await uploadVideo(file, opts.displayName ?? file.split(/[\\/]/).pop() ?? 'video', key, { mimeType, fetch: f });
     uploaded = up.name;
     opts.onUploaded?.(up.name);
     await waitVideoActive(up.name, key, { fetch: f, sleep: deps.sleep });

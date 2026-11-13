@@ -214,7 +214,7 @@ if (import.meta.main) {
   }
   const engine = flag(args, "--engine") ?? liveEngineId();
   if (args.some((a, i) => a !== "--write" && a !== "--engine" && args[i - 1] !== "--engine")) throw new Error("usage: bun LIFEOS/ROUTER/LaneTrain.ts [--engine <id>] [--write] | --reask [--limit N]");
-  if (!inputsPresent(engine)) throw new Error(`missing private router inputs under MEMORY/STATE/router (real-prompts, ${answersPath(engine).split("/").pop()}, labels4, labels5); run --reask first`);
+  if (!inputsPresent(engine)) throw new Error(`missing private router inputs under MEMORY/STATE/router (real-prompts, ${answersPath(engine).split(/[\\/]/).pop()}, labels4, labels5); run --reask first`);
   const samples = loadSamples(engine), cv = crossValidate(samples);
   console.log(`engine: ${engine}`);
   const pct = (x: number) => `${(x * 100).toFixed(1)}%`;

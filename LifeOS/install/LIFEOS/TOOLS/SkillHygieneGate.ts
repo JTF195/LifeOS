@@ -40,7 +40,7 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { PATTERN_ALLOWLIST_FILES } from "../../hooks/lib/containment-zones";
 import { confinedPath } from "./lib/Boundary";
@@ -352,7 +352,7 @@ export function unscannedSymlinks(dirArg: string, only: string | null, tracked: 
       const full = join(dir, e.name);
       if (e.isSymbolicLink()) {
         const why = unscannedBecause(full);
-        if (why !== null && (tracked === null || tracked.has(relative(skillsDir, full)))) out.push({ file: relative(skillsDir, full), line: 1, pattern: "symlink-unscanned", excerpt: why });
+        if (why !== null && (tracked === null || tracked.has(relative(skillsDir, full).split(sep).join("/")))) out.push({ file: relative(skillsDir, full).split(sep).join("/"), line: 1, pattern: "symlink-unscanned", excerpt: why });
       } else if (e.isDirectory() && !EXCLUDED_DIR_NAMES.has(e.name)) walk(full);
     }
   };

@@ -488,6 +488,9 @@ export function parsePermissionRule(rule: string): PermissionRule | null {
 }
 
 function tildeForm(s: string): string {
+  // Rules and subjects are compared and split by "/": on Windows a native subject (C:\Users\me\.ssh\x) is put in
+  // that form first, home included, or it never matches a ~/... rule.
+  if (process.platform === "win32") return s.replaceAll("\\", "/").replaceAll("$HOME", "~").replaceAll(homedir().replaceAll("\\", "/"), "~");
   const home = homedir();
   return s.replaceAll("$HOME", "~").replaceAll(home, "~");
 }

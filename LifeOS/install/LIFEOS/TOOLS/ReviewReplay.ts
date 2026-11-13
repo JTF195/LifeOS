@@ -120,7 +120,7 @@ export function allRecords(): { recs: Array<ReviewRef & { file: string }>; unrea
     for (const f of readdirSync(d).filter((x) => x.endsWith(".json"))) {
       try {
         const r = JSON.parse(readFileSync(join(d, f), "utf8")) as ReviewRef;
-        recs.push({ repoRoot: r.repoRoot, scope: r.scope, base: r.base, head: r.head, dirty: !!r.dirty, fingerprint: r.fingerprint, status: r.status, ts: r.ts, ...(r.reusedFrom ? { reusedFrom: `${repo}/${String(r.reusedFrom).split("/").pop()}` } : {}), file: `${repo}/${f}` });
+        recs.push({ repoRoot: r.repoRoot, scope: r.scope, base: r.base, head: r.head, dirty: !!r.dirty, fingerprint: r.fingerprint, status: r.status, ts: r.ts, ...(r.reusedFrom ? { reusedFrom: `${repo}/${String(r.reusedFrom).split(/[\\/]/).pop()}` } : {}), file: `${repo}/${f}` });
       } catch (e) { unreadable.push({ file: `${repo}/${f}`, reason: `unreadable record: ${(e as Error).message.slice(0, 80)}` }); }
     }
   }

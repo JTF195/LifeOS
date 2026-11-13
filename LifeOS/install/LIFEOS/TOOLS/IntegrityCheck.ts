@@ -3545,7 +3545,7 @@ function validateWithEntryManifest(pluginDir: string, manifest: Record<string, u
   const scratch = mkdtempSync(join(tmpdir(), 'ic-function-hooks-'));
   try {
     const layout = join(scratch, 'plugin');
-    cpSync(pluginDir, layout, { recursive: true, filter: (src) => src !== join(pluginDir, '.claude-plugin') && !src.split('/').includes('node_modules') });
+    cpSync(pluginDir, layout, { recursive: true, filter: (src) => src !== join(pluginDir, '.claude-plugin') && !src.split(/[\\/]/).includes('node_modules') });
     mkdirSync(join(layout, '.claude-plugin'), { recursive: true });
     writeFileSync(join(layout, '.claude-plugin', 'plugin.json'), JSON.stringify(manifest, null, 2) + '\n');
     const r = runPluginValidate(layout);

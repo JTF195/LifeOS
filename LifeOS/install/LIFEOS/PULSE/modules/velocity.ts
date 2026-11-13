@@ -303,7 +303,7 @@ function repoAliaser(): (repo: string, target?: string) => string {
   const deedsTargets = new Map<string, string>();
   for (const e of readState<DeedsFile>("deeds.json")?.repos ?? []) if (e.target) deedsTargets.set(e.repo, e.target);
   const metaPaths = new Map<string, string[]>();
-  for (const r of readState<Meta>("meta.json")?.repos ?? []) { const b = r.path.replace(/\/+$/, "").split("/").pop()!; metaPaths.set(b, [...(metaPaths.get(b) ?? []), r.path]); }
+  for (const r of readState<Meta>("meta.json")?.repos ?? []) { const b = r.path.replace(/[\\/]+$/, "").split(/[\\/]/).pop()!; metaPaths.set(b, [...(metaPaths.get(b) ?? []), r.path]); }
   return (repo, target) => {
     const candidates = [target, deedsTargets.get(repo), ...(metaPaths.get(repo) ?? []), ...roots.map((r) => `${r.replace(/\/+$/, "")}/${repo}`)];
     for (const c of candidates) { const a = c && names[c.replace(/\/+$/, "")]; if (a) return a; }

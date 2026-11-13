@@ -1345,7 +1345,7 @@ async function smokeTest(): Promise<number> {
   const realTranscript = findMostRecentTranscript();
   if (realTranscript) {
     const real = extractRecentExchanges(realTranscript, 3);
-    check("extract: real harness transcript yields exchanges", real.length > 0, `last 3 of ${realTranscript.split("/").pop()}: ${real.length} exchanges`);
+    check("extract: real harness transcript yields exchanges", real.length > 0, `last 3 of ${pathBasename(realTranscript)}: ${real.length} exchanges`);
   } else {
     check("extract: harness directory accessible", false, "no transcript found (test environment)");
   }
