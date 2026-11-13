@@ -45,6 +45,7 @@ import { run as isaCodeSyncGate } from "./IsaCodeSyncGate.hook";
 import { existsSync } from "fs";
 import { join } from "path";
 import { recordGateRun } from "../LIFEOS/TOOLS/GateReach";
+import { QUIET } from "./lib/quiet";
 
 export type GateResult = { name: string; decision?: string; reason?: string; message?: string };
 export type GateFn = (input: HookInput, results: readonly GateResult[]) => Promise<object | null>;
@@ -123,12 +124,12 @@ export async function runGates(input: HookInput, gates: Array<[string, GateFn]> 
   }
 
   // Separate blocks, deferred statuses and notes. An advisory gate's block and any gate's systemMessage are notes.
-  const blocks = results.filter((r) => r.decision === "block" && !ADVISORY_GATES.has(r.name));
+  const blocks = results.filter((r) => r.decision === "block" && !QUIET && !ADVISORY_GATES.has(r.name)); // quiet mode: every gate advisory
   const deferred = results.filter((r) => r.decision === "deferred");
   const notes = results.flatMap((r) => {
     const sm = (r as { systemMessage?: unknown }).systemMessage;
     if (typeof sm === "string" && sm.trim()) return [sm.trim()];
-    if (r.decision === "block" && ADVISORY_GATES.has(r.name)) return [`[${r.name}, advisory] ${r.reason || r.message || "flagged"}`];
+    if (r.decision === "block" && (QUIET || ADVISORY_GATES.has(r.name))) return [`[${r.name}, advisory] ${r.reason || r.message || "flagged"}`];
     return [];
   });
 

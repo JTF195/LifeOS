@@ -77,6 +77,7 @@ import { getClaudeDir, lifeosPath } from "./lib/paths"; // public issue #1974 @s
 import { hookCovers } from "./lib/function-hooks";
 // The depth matcher is shared with the Route step (LIFEOS/ROUTER/Depth.ts): one list, never two.
 import { boundedPhraseRe, stripFences, matchDepthDirective } from "../LIFEOS/ROUTER/Depth";
+import { QUIET } from "./lib/quiet";
 export { boundedPhraseRe, stripFences, matchDepthDirective };
 
 // Terminal telemetry only. Headless spawns (the texting bridge, scheduled jobs) must never receive these
@@ -802,6 +803,7 @@ export function capabilityNudgeFor(command: string, manifest: CapManifest): { id
 }
 
 export function run(input: HookInput): string | null {
+  if (QUIET) return null; // LifeOS quiet mode: no nudges
   if (HEADLESS) return null;
   try {
     const sessionId = input.session_id || '';

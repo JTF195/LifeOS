@@ -82,6 +82,7 @@ const DEFAULT_LINE_CAP = 15;
 const DEPTH_RE = /\b(extensive|thorough|comprehensive|exhaustive|deep[\s-]?dive|in[\s-]depth|detailed|long[\s-]form|full (?:analysis|report|breakdown|write[\s-]?up)|go deep|be verbose|everything (?:you|we) (?:know|have))\b/i;
 const LIFEOS_DIR = getLifeosDir();
 import { readSessionResponse } from "./lib/response-cache";
+import { QUIET } from "./lib/quiet";
 const STATE_PATH = join(LIFEOS_DIR, "MEMORY", "STATE", "drift-reminder.json");
 const INITIAL_STATE: DriftState = {
   last_fired_turn: -MIN_TURNS_BETWEEN_FIRES,
@@ -309,7 +310,7 @@ function emit(line: string): void {
 
 /** The per-turn FORMAT CONTRACT line, or null on failure. */
 export function run(rawInput: Record<string, unknown>): string | null {
-  if (HEADLESS) return null;
+  if (HEADLESS || QUIET) return null;
   try {
     const input = parseHookInput(JSON.stringify(rawInput));
     const prompt = input.prompt || input.user_prompt || "";
