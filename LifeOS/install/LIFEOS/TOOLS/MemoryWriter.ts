@@ -59,7 +59,7 @@ import {
 import { InvariantViolation, invariant } from "./Invariant";
 import { getClaudeDir } from "./Paths"; // public issue #1665 @rogdex24, #1584 @ramazanpolat — aliased resolve sites missed by the 09-03 sweep
 import { spawnSync } from "node:child_process";
-import { dirname, relative, resolve as pathResolve } from "node:path";
+import { basename, dirname, relative, resolve as pathResolve } from "node:path";
 import { appendEvent, archiveContent, entriesHash, foldState, readRows, sha256, type AppendResult } from "./lib/CortexLedgerCore";
 import { isInstructionShaped } from "./InjectionShapes";
 import { assertInsideUserData } from "./lib/ForeignDataCheck";
@@ -588,14 +588,19 @@ function tightenMode(p: string, want: number): void {
 
 function snapshotBeforeWrite(absPath: string, priorContent: string): void {
   try {
-    const base = absPath.split("/").pop()!.replace(/\.md$/, "");
+    // basename, not split("/"): on Windows the path uses backslashes, and split("/") kept the whole path as the
+    // "name", which put the snapshot outside SNAPSHOT_DIR and failed every memory write (2026-11-13).
+    const base = basename(absPath).replace(/\.md$/, "");
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     const target = pathResolve(SNAPSHOT_DIR, `${base}__${stamp}.md`);
     invariant(dirname(target) === SNAPSHOT_DIR && base.length > 0, `snapshot target ${target} must sit directly in ${SNAPSHOT_DIR}`);
     // A ring created by an older build (0755 / 0644) is tightened before the new copy lands in it.
     if (existsSync(SNAPSHOT_DIR)) tightenMode(SNAPSHOT_DIR, SNAPSHOT_DIR_MODE);
     boundaryAtomicWrite(target, priorContent, { mode: SNAPSHOT_FILE_MODE, dirMode: SNAPSHOT_DIR_MODE });
-    invariant((statSync(SNAPSHOT_DIR).mode & 0o777 & ~SNAPSHOT_DIR_MODE) === 0, `snapshot dir ${SNAPSHOT_DIR} is wider than 0700`);
+    // POSIX-only: Windows reports 0o777/0o666 for every folder whatever its ACL, so this can never pass there.
+    if (process.platform !== "win32") {
+      invariant((statSync(SNAPSHOT_DIR).mode & 0o777 & ~SNAPSHOT_DIR_MODE) === 0, `snapshot dir ${SNAPSHOT_DIR} is wider than 0700`);
+    }
     // Trim the ring: keep the newest SNAPSHOT_RING per base file; tighten the survivors.
     const mine = readdirSync(SNAPSHOT_DIR)
       .filter((f: string) => f.startsWith(`${base}__`))

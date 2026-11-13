@@ -1095,7 +1095,7 @@ async function smokeTest(): Promise<number> {
   });
   check("ISC-155: knowledge(person) write succeeded", r4.ok, r4.ok ? `path=${r4.path.replace(homedir(), "~")}` : (r4 as any).message);
   if (r4.ok) {
-    check("ISC-155: knowledge file under KNOWLEDGE/People/", r4.path.includes("/MEMORY/KNOWLEDGE/People/"));
+    check("ISC-155: knowledge file under KNOWLEDGE/People/", r4.path.replace(/\\/g, "/").includes("/MEMORY/KNOWLEDGE/People/"));
 
     // ISC-162 — relational integrity: related: block landed in frontmatter
     const body = readFileSync(r4.path, "utf8");

@@ -162,7 +162,12 @@ export function atomicWrite(path: string, data: string | Uint8Array, opts: Atomi
       let off = 0
       while (off < bytes.length) off += writeSync(fd, bytes, off, bytes.length - off)
       fsyncSync(fd)
-      invariant((fstatSync(fd).mode & 0o777) === mode, `atomicWrite: temp file mode is not 0o${mode.toString(8)}`)
+      // Windows has no POSIX permission bits: fchmod only toggles read-only and fstat reports 0o666/0o444, so this
+      // check can never pass there and crashed every write (memory reviewer "timed-out", 2026-11-13). Access on
+      // Windows comes from the folder's inherited ACL instead.
+      if (process.platform !== "win32") {
+        invariant((fstatSync(fd).mode & 0o777) === mode, `atomicWrite: temp file mode is not 0o${mode.toString(8)}`)
+      }
     } finally {
       closeSync(fd)
     }
