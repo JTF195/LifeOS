@@ -2,7 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, readdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve, sep } from "node:path";
 import { invariant } from "./Invariant.ts";
 import { getClaudeDir, getLifeosDir } from "./Paths.ts";
 import { parseIsaClaimsText, stripBulletPrefix, claimText } from "./lib/IsaClaims.ts";
@@ -86,9 +86,9 @@ export function discoverIsas(opts: Options = {}): string[] {
   }
   const seen = new Set<string>();
   return candidates.map(expandPath).filter(path => {
-    if (path.includes("/LIFEOS/MEMORY/WORK/") || !existsSync(path)) return false;
+    if (path.replace(/\\/g, "/").includes("/LIFEOS/MEMORY/WORK/") || !existsSync(path)) return false;
     const real = realpathSync(path);
-    if (real.includes("/LIFEOS/MEMORY/WORK/") || seen.has(real)) return false;
+    if (real.replace(/\\/g, "/").includes("/LIFEOS/MEMORY/WORK/") || seen.has(real)) return false;
     seen.add(real);
     return true;
   }).map(realpathSync).sort();
@@ -108,7 +108,7 @@ function eligibleItems(paths: string[]): SampleItem[] {
       if (!rows.some(r => r.type !== "manual")) continue;
       const raw = lines[claim.line - 1] ?? "";
       const text = claimText(stripBulletPrefix(raw))?.body ?? "";
-      items.push({ n: 0, isa: path.startsWith(`${home()}/`) ? `~/${path.slice(home().length + 1)}` : path, claim: claim.id, text, rows });
+      items.push({ n: 0, isa: path.startsWith(home() + sep) ? `~/${path.slice(home().length + 1).split(sep).join("/")}` : path, claim: claim.id, text, rows });
     }
   }
   return items;

@@ -41,7 +41,7 @@
  */
 
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { basename, extname, join } from "node:path";
+import { basename, extname, isAbsolute, join } from "node:path";
 import { tmpdir } from "node:os";
 import { CALIBRATION_CALLER } from "./Calibrate";
 import { ask } from "./Assay";
@@ -129,7 +129,7 @@ export function assertCase(c: unknown): asserts c is CorpusCase {
   invariant(!!r && typeof r === "object", `UseCaseBakeoff: corpus case ${id} is not an object`);
   invariant(typeof r.id === "string" && r.id.length > 0, `UseCaseBakeoff: corpus case without an id`);
   invariant(CASE_TYPES.includes(r.type as CaseType), `UseCaseBakeoff: corpus case ${id} has type ${String(r.type)}`);
-  invariant(typeof r.artifact === "string" && r.artifact.startsWith("/"), `UseCaseBakeoff: corpus case ${id} artifact must be an absolute path`);
+  invariant(typeof r.artifact === "string" && isAbsolute(r.artifact), `UseCaseBakeoff: corpus case ${id} artifact must be an absolute path`);
   invariant(r.label === "accept" || r.label === "reject", `UseCaseBakeoff: corpus case ${id} label must be accept or reject`);
   invariant(typeof r.public === "boolean", `UseCaseBakeoff: corpus case ${id} public must be a boolean`);
 }

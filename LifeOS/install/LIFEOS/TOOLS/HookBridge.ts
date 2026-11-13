@@ -49,7 +49,7 @@ import { PRIVATE_SKILL_NAMES } from "./CodeDataBoundary.ts";
  */
 
 import { existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync, unlinkSync } from "node:fs";
-import { dirname, join, basename } from "node:path";
+import { dirname, join, basename, isAbsolute } from "node:path";
 import { execFileSync } from "node:child_process";
 import { getClaudeDir, getLifeosDir, lifeosPath } from "./Paths";
 import { cacheResponse } from "../../hooks/lib/response-cache";
@@ -321,7 +321,7 @@ try {
         const w = JSON.parse(readFileSync(lifeosPath("MEMORY", "STATE", "work.json"), "utf8")) as { sessions?: Record<string, { sessionUUID?: string; isa?: string }> };
         const row = Object.values(w.sessions ?? {}).find((r) => r.sessionUUID === sid && typeof r.isa === "string");
         if (row?.isa) {
-          const p = row.isa.startsWith("/") ? row.isa : lifeosPath(...row.isa.split("/"));
+          const p = isAbsolute(row.isa) ? row.isa : lifeosPath(...row.isa.split("/"));
           const content = readFileSync(p, "utf8");
           const fm = parseFrontmatter(content) ?? {};
           const claims = countClaims(content);

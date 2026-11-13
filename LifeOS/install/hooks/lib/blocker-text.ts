@@ -11,7 +11,7 @@
  */
 import { createHash } from "node:crypto";
 import { homedir } from "node:os";
-import { basename } from "node:path";
+import { basename, sep } from "node:path";
 import { getDAName } from "./identity";
 import { claudeDirFor } from "./paths";
 
@@ -55,7 +55,7 @@ export function awayReason(o: { deviceKind?: string | null; idleMinutes: number 
 /** The project a session runs in, as {{PRINCIPAL_NAME}} would name it: LifeOS for the config root, else the directory's name. */
 export function projectName(cwd: string | undefined, home = homedir(), root = claudeDirFor(process.env, home)): string {
   if (!cwd) return "a session";
-  if (cwd === root || cwd.startsWith(`${root}/`)) return "LifeOS";
+  if (cwd === root || cwd.startsWith(`${root}${sep}`)) return "LifeOS";
   return basename(cwd) || "a session";
 }
 

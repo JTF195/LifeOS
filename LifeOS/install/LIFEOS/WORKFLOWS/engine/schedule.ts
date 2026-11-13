@@ -95,7 +95,7 @@ function isExecutable(path: string): boolean {
 
 /** Where a program resolves under a PATH string, or null. An argv[0] with a slash must be absolute and executable itself. */
 export function resolveOnPath(program: string, pathValue: string, executable: (p: string) => boolean = isExecutable): string | null {
-  if (program.includes("/")) return isAbsolute(program) && executable(program) ? program : null;
+  if (/[\\/]/.test(program)) return isAbsolute(program) && executable(program) ? program : null;
   for (const dir of pathValue.split(delimiter)) {
     if (!dir || !isAbsolute(dir)) continue;
     const candidate = join(dir, program);

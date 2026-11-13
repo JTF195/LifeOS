@@ -14,7 +14,7 @@
  */
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { invariant } from './Invariant';
@@ -78,7 +78,7 @@ function entryPath(sessionId: string, dir: string): string {
 
 export function registerSession(entry: LiveSession, dir: string = registryDir()): string {
   invariant(HARNESSES.includes(entry.harness), `known harness: ${entry.harness}`);
-  invariant(entry.cwd.startsWith('/'), `absolute cwd: ${entry.cwd}`);
+  invariant(isAbsolute(entry.cwd), `absolute cwd: ${entry.cwd}`);
   invariant(entry.pid === null || (Number.isInteger(entry.pid) && entry.pid > 1), `pid is null or a real process id: ${entry.pid}`);
   invariant(!Number.isNaN(Date.parse(entry.startedAt)), `startedAt parses: ${entry.startedAt}`);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

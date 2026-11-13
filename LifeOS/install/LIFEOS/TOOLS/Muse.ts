@@ -24,7 +24,7 @@
  */
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, sep } from "node:path";
+import { dirname, isAbsolute, join, sep } from "node:path";
 import { CROSS_VENDOR } from "./models.ts";
 import { invariant } from "./Invariant.ts";
 import { recordModelUse } from "./lib/ModelUse";
@@ -41,7 +41,7 @@ const within = (child: string, parent: string) => child === parent || child.star
 
 /** Why a workspace may not be handed to Muse, or null when it may. Symlinks are resolved before any boundary check. */
 export function workspaceRefusal(cwd: string, realHome = homedir()): string | null {
-  if (!cwd.startsWith("/")) return `--cwd must be absolute: ${cwd}`;
+  if (!isAbsolute(cwd)) return `--cwd must be absolute: ${cwd}`;
   if (!existsSync(cwd)) return `--cwd does not exist: ${cwd}`;
   const real = realpathSync(cwd);
   const home = realpathSync(realHome);

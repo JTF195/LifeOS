@@ -191,7 +191,8 @@ function isTaskIsa(path: string): boolean {
   const work = join(getClaudeDir(), "LIFEOS", "MEMORY", "WORK");
   let real = work;
   try { real = realpathSync(work); } catch { /* absent on a fresh install */ }
-  const p = resolve(path);
+  const p = resolve(path).replace(/\\/g, "/"); // native paths use backslashes on Windows
+  real = real.replace(/\\/g, "/");
   return p.includes("/MEMORY/WORK/") || p.startsWith(real + "/") || /\/skills\/[^/]+\/Examples\//.test(p);
 }
 

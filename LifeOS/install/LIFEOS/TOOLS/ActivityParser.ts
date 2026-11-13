@@ -203,7 +203,7 @@ async function parseEvents(sessionFilter?: string): Promise<ParsedActivity> {
 
       // Write tool = new files
       if (contentItem.name === "Write" && contentItem.input?.file_path) {
-        const filePath = contentItem.input.file_path;
+        const filePath = String(contentItem.input.file_path).replace(/\\/g, "/"); // transcript paths are native (backslashes on Windows)
         if (filePath.includes("/.claude/")) {
           filesCreated.add(filePath);
         }
@@ -211,7 +211,7 @@ async function parseEvents(sessionFilter?: string): Promise<ParsedActivity> {
 
       // Edit tool = modified files
       if (contentItem.name === "Edit" && contentItem.input?.file_path) {
-        const filePath = contentItem.input.file_path;
+        const filePath = String(contentItem.input.file_path).replace(/\\/g, "/"); // transcript paths are native (backslashes on Windows)
         if (filePath.includes("/.claude/")) {
           filesModified.add(filePath);
         }

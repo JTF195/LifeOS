@@ -19,7 +19,7 @@
  */
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { getClaudeDir } from "../../TOOLS/Paths";
 import { invariant } from "../../TOOLS/Invariant";
 import { createHash } from "node:crypto";
@@ -83,12 +83,12 @@ function real(p: string): string {
 
 function assertSeparate(record: string, backup: string): void {
   const r = real(record), b = real(backup);
-  invariant(r !== b && !b.startsWith(r + "/") && !r.startsWith(b + "/"), "the backup dir and the record must never overlap");
+  invariant(r !== b && !b.startsWith(r + sep) && !r.startsWith(b + sep), "the backup dir and the record must never overlap");
 }
 
 /** Writes only inside `root`, the backup dir or the restore drill's temp dir, never the live record. */
 function writeAtomic(root: string, path: string, data: Uint8Array | string): void {
-  invariant(resolve(path).startsWith(resolve(root) + "/"), "a backup or restore write stays inside its own dir");
+  invariant(resolve(path).startsWith(resolve(root) + sep), "a backup or restore write stays inside its own dir");
   mkdirSync(dirname(path), { recursive: true });
   const tmp = `${path}.tmp-${process.pid}`;
   writeFileSync(tmp, data, { mode: 0o600 });
@@ -170,7 +170,7 @@ export function backup(opts: { recordDir?: string; dir?: string; recipient?: str
   const removed: string[] = [];
   for (const [rel, entry] of Object.entries(manifest.segments)) {
     if (want.has(rel) || existsSync(join(record, rel))) continue;
-    invariant(resolve(join(dir, entry.cipher)).startsWith(dir + "/"), "a dropped backup file must sit inside the backup dir");
+    invariant(resolve(join(dir, entry.cipher)).startsWith(dir + sep), "a dropped backup file must sit inside the backup dir");
     if (existsSync(join(dir, entry.cipher))) unlinkSync(join(dir, entry.cipher));
     delete manifest.segments[rel];
     removed.push(rel);

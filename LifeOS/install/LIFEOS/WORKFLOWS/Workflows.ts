@@ -39,7 +39,7 @@ switch (command) {
   case "json": console.log(JSON.stringify(inventory, null, 2)); break;
   case "acknowledge": {
     const path = defaultSources().baseline;
-    invariant(path.endsWith("/LIFEOS/USER/CONFIG/workflows-baseline.json"), "Invalid workflow baseline destination");
+    invariant(path.replace(/\\/g, "/").endsWith("/LIFEOS/USER/CONFIG/workflows-baseline.json"), "Invalid workflow baseline destination");
     const acknowledged = inventory.findings.filter(f => f.kind === "missing" || f.kind === "orphan").map(findingKey).sort();
     writeFileSync(path, JSON.stringify({ acknowledged, at: new Date().toISOString() }, null, 2) + "\n");
     console.log(`Acknowledged ${acknowledged.length} missing or orphan findings.`); break;

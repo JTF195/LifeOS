@@ -30,7 +30,7 @@
  * @version 2.0.0
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { InvariantViolation, invariant } from "../TOOLS/Invariant.ts";
 import { contractReport } from "./cloud/contract-report.ts";
 import { dropCloudEnv, loadCloudEnvFile } from "./cloud/credentials.ts";
@@ -412,7 +412,7 @@ function template(name: string): string {
 function shown(path: string): string {
   try {
     const real = realHome();
-    return path === real || path.startsWith(real + "/") ? definitionsDir() + path.slice(real.length) : path;
+    return path === real || path.startsWith(real + sep) ? definitionsDir() + path.slice(real.length) : path;
   } catch {
     return path;
   }

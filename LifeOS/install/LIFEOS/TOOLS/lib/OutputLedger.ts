@@ -37,7 +37,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { appendFileSync, chmodSync, closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { isAbsolute, join, resolve, sep } from "node:path";
 import { invariant } from "../Invariant.ts";
 import { getLifeosDir } from "../Paths.ts";
 import { BOUNDARIES } from "./ProofReceipt.ts";
@@ -148,14 +148,14 @@ export function redactTarget(raw: string): string {
   if (!s) return "other";
   if (/^[^\s@/]+@[^\s@/]+$/.test(s)) return "email";
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) return "url";
-  if (s.startsWith("/") || s.startsWith("~")) {
+  if (isAbsolute(s) || s.startsWith("~")) {
     const home = homedir();
     const abs = s.startsWith("~") ? join(home, s.slice(1)) : resolve(s);
-    if (abs.startsWith(join(home, "Downloads") + "/")) return "path:downloads";
-    if (abs.startsWith(join(home, "Desktop") + "/")) return "path:desktop";
-    if (abs.startsWith(join(home, "Documents") + "/")) return "path:documents";
+    if (abs.startsWith(join(home, "Downloads") + sep)) return "path:downloads";
+    if (abs.startsWith(join(home, "Desktop") + sep)) return "path:desktop";
+    if (abs.startsWith(join(home, "Documents") + sep)) return "path:documents";
     if (abs.startsWith("/tmp/") || abs.startsWith("/private/tmp/") || abs.startsWith("/var/folders/")) return "path:tmp";
-    if (abs.startsWith(home + "/")) return "path:home";
+    if (abs.startsWith(home + sep)) return "path:home";
     return "path:other";
   }
   return "other";

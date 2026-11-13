@@ -18,7 +18,7 @@
  */
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import type { BunPlugin } from "bun";
 import { resolveActionSource } from "../engine/runner.ts";
 import { parseDefinitionText } from "../engine/format.ts";
@@ -148,8 +148,8 @@ export async function buildRunner(definitionPath: string, scriptOverrides: Recor
   const worker = join(workerDir, "bundle", "worker.js");
   writeFileSync(worker, code);
 
-  const engineFiles = inputs.map(p => resolve(p)).filter(p => !p.includes("/node_modules/") && (p.startsWith(join(WORKFLOWS_DIR, "engine")) || p.startsWith(join(WORKFLOWS_DIR, "v1"))))
-    .map(p => relative(LIFEOS_DIR, p)).sort();
+  const engineFiles = inputs.map(p => resolve(p)).filter(p => !p.replace(/\\/g, "/").includes("/node_modules/") && (p.startsWith(join(WORKFLOWS_DIR, "engine")) || p.startsWith(join(WORKFLOWS_DIR, "v1"))))
+    .map(p => relative(LIFEOS_DIR, p).split(sep).join("/")).sort();
   if (!engineFiles.some(f => f.startsWith("WORKFLOWS/engine/"))) throw new Error("The bundle compiled no engine source; ISC-32 needs the current engine, not a copy");
   const provenance = join(outDir, "provenance.json");
   writeFileSync(provenance, `${JSON.stringify({

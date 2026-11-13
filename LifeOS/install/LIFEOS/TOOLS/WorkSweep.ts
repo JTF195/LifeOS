@@ -42,7 +42,7 @@ for (const __k of ["LIFEOS_DIR", "LIFEOS_CONFIG_DIR", "PROJECTS_DIR"]) {
 import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, appendFileSync } from "fs";
 import { getDAName } from "../../hooks/lib/identity"
 
-import { isAbsolute, join } from "path";
+import { dirname, isAbsolute, join } from "path";
 import { loadWorkConfig } from "../../hooks/lib/work-config";
 import { phaseHasWorkStarted, phaseBracket } from "./ascent";
 import { redactIssuePayload } from "./lib/WorkRedact";
@@ -143,7 +143,7 @@ function isMeaningfulWork(fm: ISAFm, isaPath: string): boolean {
   // NATIVE sessions: require ≥2 artifacts beyond ISA.md in the dir (signals real work,
   // not a placeholder native row with only the scaffold).
   try {
-    const dir = isaPath.replace(/\/ISA\.md$/, "");
+    const dir = dirname(isaPath);
     const contents = readdirSync(dir).filter((n) => n !== "ISA.md" && !n.startsWith("."));
     return contents.length >= 2;
   } catch {

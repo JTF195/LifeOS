@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { homedir } from "node:os";
 
 export function resolveBun(): string {
-  if (process.execPath && /\/bun$/.test(process.execPath)) return process.execPath;
+  if (process.execPath && (process.platform === "win32" ? /[\\/]bun\.exe$/i : /\/bun$/).test(process.execPath)) return process.execPath;
   const viaWhich = typeof Bun !== "undefined" ? Bun.which("bun") : null;
   if (viaWhich) return viaWhich;
   const home = process.env.HOME ?? process.env.USERPROFILE ?? homedir();

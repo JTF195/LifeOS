@@ -105,12 +105,13 @@ async function main(input: any): Promise<string | null> {
   const isISA = filePath.endsWith('/' + ARTIFACT_FILENAME) || filePath.endsWith(ARTIFACT_FILENAME);
   const isLegacyPRD = filePath.endsWith('/' + LEGACY_ARTIFACT_FILENAME) || filePath.endsWith(LEGACY_ARTIFACT_FILENAME);
   if (!isISA && !isLegacyPRD) return null;
-  const isWorkISA = filePath.includes('MEMORY/WORK/');
+  const fwdPath = filePath.replace(/\\/g, '/'); // native path on Windows: the path tests below use "/"
+  const isWorkISA = fwdPath.includes('MEMORY/WORK/');
 
   // v6.9.0: Read trigger — bump heartbeat on the slug, rebind UUID, debounced.
   // No file write-back, no rewind. Read alone never mutates the ISA.
   if (toolName === 'Read') {
-    const slugMatch = filePath.match(/MEMORY\/WORK\/([^/]+)\//);
+    const slugMatch = fwdPath.match(/MEMORY\/WORK\/([^/]+)\//);
     if (slugMatch) {
       bumpLastToolActivityBySlug(slugMatch[1], input.session_id);
       // public PR #2130, @pai-scaffolde: refresh the body hash on Read of an ISA
@@ -139,13 +140,13 @@ async function main(input: any): Promise<string | null> {
   // (found 2026-07-22 — both of this session's ISAs never registered).
   if (!fm.slug) {
     if (isWorkISA) {
-      const slugFromPath = filePath.match(/MEMORY\/WORK\/([^/]+)\//);
+      const slugFromPath = fwdPath.match(/MEMORY\/WORK\/([^/]+)\//);
       if (slugFromPath) fm.slug = slugFromPath[1];
     } else {
       // Project ISA (<project>/ISA.md): the slug is the project directory name,
       // prefixed to avoid colliding with a same-named WORK slug
       // (public issue #1807, @mhaisham).
-      const dirMatch = filePath.match(/([^/]+)\/[^/]+$/);
+      const dirMatch = fwdPath.match(/([^/]+)\/[^/]+$/);
       if (dirMatch) fm.slug = 'project-' + dirMatch[1].toLowerCase();
     }
   }

@@ -10,7 +10,7 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
@@ -75,7 +75,7 @@ export function compareTrees(installed: string, reference: string): Pick<Attesta
     // either, so its files are not missing.
     if (optInNotInstalled(tree, join(installed, tree))) continue;
     for (const rel of walkFiles(join(reference, tree))) {
-      if (join(tree, rel).startsWith(BOOTSTRAP_DIR + "/")) continue;
+      if (join(tree, rel).startsWith(BOOTSTRAP_DIR + sep)) continue;
       const ref = join(reference, tree, rel);
       const inst = join(installed, tree, rel);
       if (!existsSync(inst)) { missing++; continue; }

@@ -46,7 +46,7 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { appendFileSync, chmodSync, mkdirSync } from "node:fs";
-import { basename, dirname, extname, join, resolve } from "node:path";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { effectiveProgram, programName, simpleCommands } from "../../hooks/lib/shell-commands.ts";
 import { invariant, InvariantViolation } from "./Invariant.ts";
 import { getClaudeDir, getLifeosDir } from "./Paths.ts";
@@ -252,7 +252,7 @@ type Activity = { writes: Map<string, number>; strict: Map<string, number>; exac
 /** True when the activity log names this file, or names its directory with a write. */
 export function attributedByActivity(a: Pick<Activity, "strict" | "exactDirs" | "treeDirs">, p: string): boolean {
   if (a.strict.has(p) || a.exactDirs.has(dirname(p))) return true;
-  for (const d of a.treeDirs) if (p.startsWith(d + "/")) return true;
+  for (const d of a.treeDirs) if (p.startsWith(d + sep)) return true;
   return false;
 }
 
@@ -469,8 +469,12 @@ function readActivity(file: string, sinceMs: number, roots: string[], home: stri
     let pos = size;
     let carry = "";
     // A command may name a root as ~/Documents or $HOME/Documents; the cheap line filter must see those spellings too.
-    const rootNeedles = roots.flatMap((r) => (r.startsWith(home + "/") ? [r, "~" + r.slice(home.length), "$HOME" + r.slice(home.length), "${HOME}" + r.slice(home.length)] : [r]));
-    const inRoot = (p: string): boolean => roots.some((r) => p.startsWith(r + "/"));
+    // The transcript line is JSON, so a native path appears JSON-escaped (backslashes doubled on Windows); command text spells ~ and $HOME with "/".
+    const rootNeedles = roots.flatMap((r) => {
+      const rel = r.startsWith(home + sep) ? r.slice(home.length).split(sep).join("/") : null;
+      return [r, JSON.stringify(r).slice(1, -1), ...(rel === null ? [] : ["~" + rel, "$HOME" + rel, "${HOME}" + rel])];
+    });
+    const inRoot = (p: string): boolean => roots.some((r) => p.startsWith(r + sep));
     const consider = (line: string) => {
       if (!line) return true;
       const tsM = /"timestamp":"([^"]+)"/.exec(line);

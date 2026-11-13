@@ -22,7 +22,7 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 import { ATLAS_DIR, type AssetObs, type CollectResult, type Collector, type EdgeObs } from "../Store";
 import {
   buildExport, classifyLane, classifyTyped, isModelSelection, laneRefs, MODEL_ID_RG, shapeOf,
@@ -173,7 +173,10 @@ function scanTree(
 const catalogNote = (catalogs: string[], shorten: (p: string) => string) =>
   catalogs.length ? `; ${catalogs.length} catalog file(s) skipped (${CATALOG_MIN_IDS}+ ids): ${catalogs.slice(0, 6).map(shorten).join(", ")}` : "";
 
-const tilde = (p: string, home: string) => (p.startsWith(home + "/") ? "~" + p.slice(home.length) : p);
+// Paths here mix separators on win32 (PROJECTS.md "~/x" joined to a native home), so prefix tests compare forward-slash forms.
+const fwd = (p: string) => p.replace(/\\/g, "/");
+
+const tilde = (p: string, home: string) => (fwd(p).startsWith(fwd(home) + "/") ? "~" + fwd(p.slice(home.length)) : p);
 
 // ── Sources ──────────────────────────────────────────────────────────
 
@@ -207,7 +210,7 @@ export function lifeosLeg(opts: { claudeDir?: string } = {}): Leg {
     const userLink = join(root, "LIFEOS", "USER");
     if (existsSync(userLink)) { userReal = realpathSync(userLink); if (userReal !== userLink) roots.push(userReal); }
     const consumerOf = (abs: string): Use["consumer"] => {
-      const rel = userReal && abs.startsWith(userReal + "/") ? join("LIFEOS/USER", abs.slice(userReal.length + 1)) : relative(root, abs);
+      const rel = (userReal && abs.startsWith(userReal + sep) ? join("LIFEOS/USER", abs.slice(userReal.length + 1)) : relative(root, abs)).split(sep).join("/");
       return { key: `code:lifeos:${rel}`, kind: "code", name: rel, attrs: { scope: "lifeos", path: rel } };
     };
     const runtime = ["projects", "file-history", "telemetry", "plans", "cache", "debug", "shell-snapshots", "todos", "statsig", "logs"].map((d) => `!/${d}/**`);
@@ -249,7 +252,7 @@ export function repoDirsFromProjects(md: string, home: string, claudeDir: string
     const project = cells[0].replace(/\*\*/g, "").replace(/[🟡🟢🎯🚨⚠️]/gu, "").split("(")[0].trim();
     for (const m of cells[1].matchAll(/`(~\/[^`]+|\/[^`]+)`/g)) {
       let p = m[1].replace(/^~(?=\/)/, home).replace(/\/+$/, "");
-      if (p.startsWith(claudeDir) || p.startsWith(join(home, ".config")) || p.startsWith("/tmp") || p.startsWith("/private/tmp")) continue;
+      if (fwd(p).startsWith(fwd(claudeDir)) || fwd(p).startsWith(fwd(join(home, ".config"))) || p.startsWith("/tmp") || p.startsWith("/private/tmp")) continue;
       if (existsSync(p) && statSync(p).isFile()) p = dirname(p);
       if (seen.has(p)) continue;
       seen.add(p);
@@ -286,7 +289,7 @@ export function projectsLeg(opts: { projectsMd?: string; home?: string; claudeDi
     const byDir = new Map(present.map((r) => [r.dir, r]));
     const consumerOf = (abs: string): Use["consumer"] | null => {
       let best: string | null = null;
-      for (const d of byDir.keys()) if (abs.startsWith(d + "/") && (!best || d.length > best.length)) best = d;
+      for (const d of byDir.keys()) if (fwd(abs).startsWith(fwd(d) + "/") && (!best || d.length > best.length)) best = d;
       if (!best) return null;
       const r = byDir.get(best)!;
       return { key: `code:repo:${basename(best)}`, kind: "code", name: basename(best), attrs: { scope: "product", path: tilde(best, home), project: r.project } };
@@ -294,7 +297,7 @@ export function projectsLeg(opts: { projectsMd?: string; home?: string; claudeDi
     const scan = present.length ? scanTree(present.map((r) => r.dir), consumerOf, reg, []) : { uses: [], catalogs: [] };
     if (scan === null) return toResult("models-projects", [], "unreadable", "rg unavailable", reg);
     const { uses, catalogs } = scan;
-    for (const u of uses) if (u.file) { const d = [...byDir.keys()].find((k) => u.file!.startsWith(k + "/")); if (d) u.file = relative(d, u.file); }
+    for (const u of uses) if (u.file) { const d = [...byDir.keys()].find((k) => fwd(u.file!).startsWith(fwd(k) + "/")); if (d) u.file = relative(d, u.file).split(sep).join("/"); }
     // Repo → the worker it deploys as, so the view can compare the repo with what runs.
     const edges: EdgeObs[] = [];
     const assets: AssetObs[] = [];

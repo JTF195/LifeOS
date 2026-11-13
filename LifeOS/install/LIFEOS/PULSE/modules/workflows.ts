@@ -1,6 +1,6 @@
 import { existsSync, openSync, readFileSync, readSync, closeSync, statSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { buildInventory } from "../../WORKFLOWS/Inventory.ts";
 import { attachApps, loadAppConfig, resolveIcon } from "./workflowApps.ts";
 import type { Inventory, WorkflowRecord } from "../../WORKFLOWS/types.ts";
@@ -96,7 +96,7 @@ function appIcon(slug: string): Response {
   });
 }
 
-const tilde = (p: string) => { const h = homedir(); return p === h || p.startsWith(`${h}/`) ? `~${p.slice(h.length)}` : p; };
+const tilde = (p: string) => { const h = homedir(); return p === h || p.startsWith(`${h}/`) || p.startsWith(h + sep) ? `~${p.slice(h.length)}` : p; };
 
 /** Reads an agent job's `<id>.jsonl`, tail-bounded so a runaway log cannot stall the request. */
 const readAgentRunLog: RunLogReader = (r: WorkflowRecord) => {

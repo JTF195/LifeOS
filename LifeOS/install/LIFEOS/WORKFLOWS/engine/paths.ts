@@ -60,7 +60,7 @@ export function systemActionsDir(): string {
 
 /** True when the argument names a file rather than a definition in the definitions home. */
 export function looksLikePath(ref: string): boolean {
-  return ref.includes("/") || ref.endsWith(".yaml") || ref.endsWith(".yml");
+  return /[\\/]/.test(ref) || ref.endsWith(".yaml") || ref.endsWith(".yml");
 }
 
 export function pathForName(name: string, dir: string = definitionsDir()): string {

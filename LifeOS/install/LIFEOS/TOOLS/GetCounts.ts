@@ -44,7 +44,7 @@ for (const __k of ["LIFEOS_DIR", "LIFEOS_CONFIG_DIR", "PROJECTS_DIR"]) {
  */
 
 import { readdirSync, existsSync, statSync } from "fs";
-import { join } from "path";
+import { join, basename } from "path";
 import { homedir } from "node:os";
 import { getClaudeDir, getLifeosDir } from "./Paths"; // public issue #1974 @sabo961, PR #1918 @PigLardLord
 
@@ -102,7 +102,7 @@ function countIntentFiles(dir: string): number {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const fullPath = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name.toLowerCase() === 'intents' && !dir.endsWith('/skills')) {
+        if (entry.name.toLowerCase() === 'intents' && basename(dir) !== 'skills') {
           // Found an Intents directory - count all .md files inside
           count += countFilesRecursive(fullPath, '.md');
         } else {

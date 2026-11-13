@@ -141,7 +141,8 @@ export function isTaskIsa(isaPath: string): boolean {
   const abs = resolve(isaPath);
   let real = abs;
   try { if (existsSync(abs)) real = realpathSync(abs); } catch { /* keep the lexical path */ }
-  return real.includes("/MEMORY/WORK/") || abs.includes("/MEMORY/WORK/");
+  // native paths use backslashes on Windows
+  return real.replace(/\\/g, "/").includes("/MEMORY/WORK/") || abs.replace(/\\/g, "/").includes("/MEMORY/WORK/");
 }
 
 const TOMBSTONE_RE = /^\s*[-*]\s+\[[ xX~]\]\s+([A-Za-z][\w.-]*)\s*:\s*\[DROPPED\b/gm;

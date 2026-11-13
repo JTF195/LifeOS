@@ -7,8 +7,12 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, relative, basename } from 'path';
+import { join, relative, basename, isAbsolute } from 'path';
 import { getLifeosDir, getClaudeDir } from './paths';
+
+// Windows: native paths use "\"; the path tests in this module are written with "/".
+// FileChange.path is stored in the "/" spelling. Unchanged on macOS/Linux.
+const fwd = (p: string): string => (process.platform === 'win32' ? p.replace(/\\/g, '/') : p);
 
 // ============================================================================
 // Types
@@ -96,8 +100,8 @@ const PHILOSOPHICAL_PATTERNS = [
 
 // Structural change patterns
 const STRUCTURAL_PATTERNS = [
-  /\/SKILL\.md$/i,           // Skill definitions
-  /\/Intents\//i,         // Intent routing
+  /[\\/]SKILL\.md$/i,        // Skill definitions
+  /[\\/]Intents[\\/]/i,   // Intent routing
   /settings\.json$/i,        // Configuration
   /frontmatter/i,            // Metadata changes
 ];
@@ -188,14 +192,16 @@ export function parseToolUseBlocks(transcriptPath: string): FileChange[] {
  * changes (public issue #1797, @Steffen025).
  */
 function isUnderDir(p: string, root: string): boolean {
+  p = fwd(p);
+  root = fwd(root);
   return p === root || p.startsWith(root + '/');
 }
 
 function normalizeToRelativePath(absolutePath: string): string {
   if (isUnderDir(absolutePath, LIFEOS_DIR)) {
-    return relative(LIFEOS_DIR, absolutePath);
+    return fwd(relative(LIFEOS_DIR, absolutePath));
   }
-  return absolutePath;
+  return fwd(absolutePath);
 }
 
 /**
@@ -234,7 +240,7 @@ export function categorizeChange(path: string): ChangeCategory | null {
   // documentation pipelines never fired for hook or skill work, which is most
   // system work. Measured on a live transcript: 9 file changes, 6 of them
   // hooks, all categorized null and reported "not significant".
-  const absolutePath = path.startsWith('/') ? path : join(CLAUDE_DIR, path);
+  const absolutePath = isAbsolute(path) ? path : join(CLAUDE_DIR, path);
   // Path-boundary test, not string prefix (public issue #1797, @Steffen025).
   if (!isUnderDir(absolutePath, CLAUDE_DIR) && !isUnderDir(absolutePath, LIFEOS_DIR)) {
     return null;

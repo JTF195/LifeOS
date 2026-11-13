@@ -50,6 +50,9 @@ import type { ParsedTranscript } from '../../LIFEOS/TOOLS/TranscriptParser';
 import { isDesktopChannel, logSkippedVoice, getNotificationChannel } from '../lib/notification-channel';
 import { PULSE_BASE } from '../../LIFEOS/PULSE/endpoint';
 
+// Windows: transcript and config paths are native ("\"); the path tests below are written with "/". Unchanged elsewhere.
+const fwd = (p: string): string => (process.platform === 'win32' ? p.replace(/\\/g, '/') : p);
+
 
 // ============================================================================
 // Types
@@ -162,14 +165,16 @@ function getModifiedFiles(transcriptPath: string): Set<string> {
 }
 
 function isSystemDocModified(modifiedFiles: Set<string>): boolean {
-  for (const path of modifiedFiles) {
+  for (const native of modifiedFiles) {
+    const path = fwd(native);
     if (path.includes('LIFEOS/') && path.endsWith('.md')) return true;
   }
   return false;
 }
 
 function isHookModified(modifiedFiles: Set<string>): boolean {
-  for (const path of modifiedFiles) {
+  for (const native of modifiedFiles) {
+    const path = fwd(native);
     if (path.includes('/hooks/') && path.endsWith('.ts')) return true;
   }
   return false;
@@ -183,12 +188,13 @@ function isHookModified(modifiedFiles: Set<string>): boolean {
  * Excludes MEMORY/WORK, MEMORY/LEARNING, MEMORY/STATE, and other non-system paths.
  */
 function isSystemFileModified(modifiedFiles: Set<string>): boolean {
-  const LIFEOS_DIR = getLifeosDir();
-  const CLAUDE_DIR = getClaudeDir();
+  const LIFEOS_DIR = fwd(getLifeosDir());
+  const CLAUDE_DIR = fwd(getClaudeDir());
   const LIFEOS_EXCLUDED = ['MEMORY/WORK/', 'MEMORY/LEARNING/', 'MEMORY/STATE/', 'Plans/', '.git/', 'node_modules/', 'ShellSnapshots/', 'MEMORY/VOICE/', 'MEMORY/RELATIONSHIP/', 'history.jsonl', '.quote-cache'];
   const CLAUDE_EXCLUDED = ['projects/', '.git/', 'node_modules/', 'history.jsonl'];
 
-  for (const filePath of modifiedFiles) {
+  for (const native of modifiedFiles) {
+    const filePath = fwd(native);
     // --- Check ~/.claude/LIFEOS/ paths FIRST ---
     // LIFEOS_DIR sits inside CLAUDE_DIR by default, so the shorter prefix used
     // to win and this arm was unreachable: editing LIFEOS/DOCUMENTATION never
@@ -501,15 +507,16 @@ export function buildInferenceContext(
   const parts: string[] = [];
 
   // Collect modified system files (paths only) — must match isSystemFileModified scope
-  const relevantFiles = Array.from(modifiedFiles).filter(f =>
-    f.includes('/hooks/') ||
-    f.includes('/LIFEOS/') ||
-    f.includes('skills/') ||
-    f.endsWith('settings.json') ||
-    f.includes('/agents/') ||
-    f.includes('/custom-agents/') ||
-    f.endsWith('CLAUDE.md'),
-  );
+  const relevantFiles = Array.from(modifiedFiles).filter(native => {
+    const f = fwd(native);
+    return f.includes('/hooks/') ||
+      f.includes('/LIFEOS/') ||
+      f.includes('skills/') ||
+      f.endsWith('settings.json') ||
+      f.includes('/agents/') ||
+      f.includes('/custom-agents/') ||
+      f.endsWith('CLAUDE.md');
+  });
 
   for (const filePath of relevantFiles.slice(0, 5)) { // Cap at 5 files
     try {

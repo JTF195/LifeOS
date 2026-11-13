@@ -142,7 +142,7 @@ export function isaLive(isa: IsaInfo | undefined): { live: boolean; why: string 
 export function evaluate(rows: Row[], src: { workflows: WorkflowInfo[]; isas: IsaInfo[] }, sensed: Set<string>, now = Date.now()): PursuitRow[] {
   const wf = new Map(src.workflows.map((w) => [w.name, w]));
   const isaBySlug = new Map(src.isas.map((i) => [i.slug, i]));
-  const findIsa = (name: string) => isaBySlug.get(name) ?? src.isas.find((i) => i.path.endsWith(`/${name}/ISA.md`) || i.path.endsWith(`/${name}`));
+  const findIsa = (name: string) => isaBySlug.get(name) ?? src.isas.find((i) => { const p = i.path.replace(/\\/g, "/"); return p.endsWith(`/${name}/ISA.md`) || p.endsWith(`/${name}`); });
   return rows.map((r) => {
     const id = rowRef(r);
     const links: Link[] = [];

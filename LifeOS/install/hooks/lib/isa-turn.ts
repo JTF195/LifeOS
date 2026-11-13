@@ -1,9 +1,9 @@
-import { isAbsolute, resolve } from "node:path";
+import { isAbsolute, resolve, sep } from "node:path";
 import { realPathOf } from "./shell-paths";
 import { shellSteps } from "./shell-commands";
 import type { TxEvent } from "./transcript-evidence";
 
-const ISA_PATH_RE = /(?:^|\/)(?:ISA\.md|bunker\.isa\.md)$/i;
+const ISA_PATH_RE = /(?:^|[\\/])(?:ISA\.md|bunker\.isa\.md)$/i;
 
 export const ISA_ADDRESSED_RE =
   /\bISA(?:'s|s)?\s+(?:is\s+|was\s+|are\s+)?(?:already\s+)?(?:current|up[\s-]?to[\s-]?date|updated|unchanged|fresh|complete|closed|\d+\s*\/\s*\d+)\b|\bno\s+ISA\s+(?:update|delta|change)s?\s+(?:needed|required)\b|\bupdated?\s+the\s+ISA\b|\bISA\s+doesn'?t\s+need\b/i;
@@ -37,7 +37,8 @@ function namesActive(file: string, activeIsa: string, target: string): boolean {
   if (isAbsolute(file)) return physical(file) === target;
   const segs = file.split("/");
   if (segs.length < 2 || segs.some((s) => s === "" || s === "." || s === "..")) return false;
-  return target.endsWith(`/${file}`) || resolve(activeIsa).endsWith(`/${file}`);
+  // `file` is a sed word ("/" only); the native paths are compared in the "/" spelling.
+  return target.split(sep).join("/").endsWith(`/${file}`) || resolve(activeIsa).split(sep).join("/").endsWith(`/${file}`);
 }
 
 /**

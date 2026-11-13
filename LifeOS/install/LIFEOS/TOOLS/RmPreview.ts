@@ -12,7 +12,7 @@
  */
 import { lstatSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, join, resolve, sep } from "node:path";
 
 export const MAX_FILES = 10_000;
 export const MAX_MS = 1_500;
@@ -104,7 +104,7 @@ export function preview(command: string, cwd: string, home = homedir()): RmPrevi
 export function noticeLine(p: RmPreview, cwd: string): string | null {
   if (!p.isRm) return null;
   const rel = (t: RmTarget) => {
-    const r = t.path.startsWith(cwd + "/") ? t.path.slice(cwd.length + 1) : t.path;
+    const r = t.path.startsWith(cwd + sep) ? t.path.slice(cwd.length + 1) : t.path;
     return t.kind === "dir" ? `${r}/` : r;
   };
   const present = p.targets.filter((t) => t.kind !== "missing").sort((a, b) => b.files - a.files);

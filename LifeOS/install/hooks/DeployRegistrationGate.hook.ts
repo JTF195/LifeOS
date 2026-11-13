@@ -45,7 +45,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "fs";
 import { runGate } from "./lib/gate-run";
-import { join } from "path";
+import { isAbsolute, join } from "path";
 import { homedir } from "os";
 import { readHookInput, parseTranscriptFromInput } from "./lib/hook-io";
 import { getClaudeDir, lifeosPath } from "./lib/paths";
@@ -717,7 +717,7 @@ export function parseAnalyticsRegistryConfig(source: string | null): AnalyticsRe
     const config = JSON.parse(source);
     if (typeof config.project !== "string" || !config.project.trim() || !Array.isArray(config.files) || !config.files.length) return null;
     for (const file of config.files) {
-      if (typeof file.path !== "string" || !file.path || file.path.startsWith("/") || file.path.split(/[\\/]/).includes("..") ||
+      if (typeof file.path !== "string" || !file.path || isAbsolute(file.path) || file.path.split(/[\\/]/).includes("..") ||
           typeof file.label !== "string" || !file.label.trim() ||
           (file.enclosingObject !== undefined && (typeof file.enclosingObject !== "string" || !/^[A-Za-z_$][\w$]*$/.test(file.enclosingObject)))) return null;
     }

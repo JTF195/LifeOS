@@ -143,7 +143,7 @@ export type Scope = "system" | "project" | "task";
 
 /** Task scale: a task ISA, or a skill's example ISA (examples illustrate every scale, so they follow task rules). */
 function isTaskScale(path: string): boolean {
-  return path.startsWith(WORK + "/") || path.startsWith(WORK_REAL + "/") || /\/skills\/[^/]+\/Examples\//.test(path);
+  return path.startsWith(WORK + sep) || path.startsWith(WORK_REAL + sep) || /[\\/]skills[\\/][^\\/]+[\\/]Examples[\\/]/.test(path);
 }
 
 /** L2 is required on project, system, and feature-bearing ISAs. */
@@ -267,7 +267,7 @@ function discoverInto(scope: Scope, unreadable: string[]): string[] {
         if (/OLD-archived/i.test(d) || isLinkedWorktree(repo)) continue;
         try { if (!statSync(repo).isDirectory()) continue; } catch { unreadable.push(repo); continue; }
         // `runs/` holds generated benchmark artifacts (arc-code), which are data, never working ISAs.
-        walkInto(repo, (dir) => isLinkedWorktree(dir) || /\/runs$/.test(dir), out, 0, unreadable);
+        walkInto(repo, (dir) => isLinkedWorktree(dir) || /[\\/]runs$/.test(dir), out, 0, unreadable);
       }
     }
   }

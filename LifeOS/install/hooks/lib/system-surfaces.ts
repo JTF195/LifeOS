@@ -52,6 +52,9 @@ const TAIL_SURFACES: Array<{ tail: string; tier: SurfaceTier; label: string }> =
 
 const basename = (p: string): string => p.split("/").pop() ?? p;
 
+// Windows: native paths use "\"; every test below is in the "/" spelling. Unchanged elsewhere.
+const fwd = (s: string): string => (process.platform === "win32" ? s.replace(/\\/g, "/") : s);
+
 /**
  * Classify an absolute path. Returns null when the file is not a system
  * surface — ordinary project code, scratch files, and the memory tree all
@@ -59,7 +62,7 @@ const basename = (p: string): string => p.split("/").pop() ?? p;
  */
 export function classifySurface(absPath: string, claudeRoot: string): Surface | null {
   if (!absPath) return null;
-  const p = absPath.replace(/\/+$/, "");
+  const p = fwd(absPath).replace(/\/+$/, "");
   const base = basename(p);
 
   // ISA files are the state-of-record wherever they live — including project
@@ -76,7 +79,7 @@ export function classifySurface(absPath: string, claudeRoot: string): Surface | 
   }
 
   // Everything below is scoped to the installation root.
-  const root = claudeRoot.replace(/\/+$/, "");
+  const root = fwd(claudeRoot).replace(/\/+$/, "");
   if (!p.startsWith(root + "/")) return null;
   const rel = p.slice(root.length + 1);
 

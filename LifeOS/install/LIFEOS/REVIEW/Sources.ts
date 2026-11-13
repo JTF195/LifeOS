@@ -13,7 +13,7 @@
  * (current-ideal delta ISC-57).
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import { readJson } from "./Store";
 import { scan, statvsDir } from "../STATVS/index";
 import { recordRows, type CloudConn, type RecordRow } from "../STATVS/lib/cloudRead";
@@ -284,9 +284,9 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * file name must match a real file in its directory: an empty directory is not a producer's output.
  */
 export function present(path: string, home: string, claude: string): boolean {
-  const abs = path.startsWith("~/") ? join(home, path.slice(2)) : path.startsWith("/") ? path : join(claude, path);
+  const abs = path.startsWith("~/") ? join(home, path.slice(2)) : isAbsolute(path) ? path : join(claude, path);
   try {
-    if (abs.endsWith("/")) return existsSync(abs) && statSync(abs).isDirectory();
+    if (/[\\/]$/.test(abs)) return existsSync(abs) && statSync(abs).isDirectory();
     const dir = dirname(abs), base = basename(abs);
     if (/[<*]/.test(dir)) return false;
     if (!/[<*]/.test(base)) return existsSync(abs) && statSync(abs).isFile();

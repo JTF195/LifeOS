@@ -59,7 +59,7 @@ import { spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { effectiveProgram, programName, shellSteps, simpleCommands, type SimpleCommand } from "../../hooks/lib/shell-commands.ts";
 import { invariant } from "./Invariant";
 import { lifeosPath } from "./Paths";
@@ -423,7 +423,7 @@ export interface IsaSource { path: string; text: string; fromBase: boolean; diff
 export function isaAt(root: string, scope: string, base: string): IsaSource | null {
   // Every candidate is tried at the base first, so a change cannot shadow the base ISA by adding a closer one, and a
   // deleted ISA still judges the change that deleted it (2026-10-23 checker). Only an ISA new in the span reads the tree.
-  const rels = [...new Set([join(scope, "ISA.md"), "ISA.md"].map((p) => p.replace(/^\.\//, "")))];
+  const rels = [...new Set([join(scope, "ISA.md"), "ISA.md"].map((p) => p.split(sep).join("/").replace(/^\.\//, "")))]; // git paths use "/"
   const outOfScope = rels.filter((r) => !(scope === "." || r.startsWith(`${scope}/`)));
   for (const rel of base === EMPTY_TREE ? [] : rels) {
     // A blob, never a symlink: `git show` of a link prints its target path, not an ISA.
@@ -856,7 +856,7 @@ export async function review(opts: ReviewOptions): Promise<ReviewOutcome> {
   const rootRaw = git(dir, ["rev-parse", "--show-toplevel"], true).trim();
   if (!rootRaw) return { code: 2, message: `review: ${dir} is not inside a git repo; nothing reviewed` };
   const root = realpathSync(rootRaw);
-  const scope = relative(root, dir) || ".";
+  const scope = relative(root, dir).split(sep).join("/") || "."; // scopes are stored and matched with "/"
   const dirs = recordDirs(root);
   const recDir = dirs.write;
   const records = readRecords(dirs.read);
@@ -995,7 +995,7 @@ export function status(dirArg: string): ReviewRecord | null {
   const rootRaw = git(dir, ["rev-parse", "--show-toplevel"], true).trim();
   if (!rootRaw) return null;
   const root = realpathSync(rootRaw);
-  const scope = relative(root, dir) || ".";
+  const scope = relative(root, dir).split(sep).join("/") || "."; // scopes are stored and matched with "/"
   return readRecords(recordDirs(root).read).filter((r) => r.scope === scope).at(-1) ?? null;
 }
 

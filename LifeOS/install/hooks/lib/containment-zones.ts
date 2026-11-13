@@ -251,9 +251,18 @@ export function matchesPattern(relPath: string, pattern: string): boolean {
   return i === pathParts.length;
 }
 
+// Windows only: the one spelling used for guard comparisons, "/" for every separator
+// ("C:\a\b" -> "C:/a/b"). Unchanged on macOS/Linux, where a backslash is an ordinary filename character.
+export function winFwd(p: string): string {
+  return process.platform === "win32" ? p.replace(/\\/g, "/") : p;
+}
+
 // Normalize an absolute path to the path relative to CLAUDE_ROOT. Returns
 // the input unchanged if it does not live under CLAUDE_ROOT.
 export function relativeToClaudeRoot(absolutePath: string, claudeRoot: string): string {
+  // Windows: native paths use "\"; the zone patterns and the returned relPath use "/".
+  absolutePath = winFwd(absolutePath);
+  claudeRoot = winFwd(claudeRoot);
   if (absolutePath === claudeRoot) return "";
   const prefix = claudeRoot.endsWith("/") ? claudeRoot : claudeRoot + "/";
   return absolutePath.startsWith(prefix) ? absolutePath.slice(prefix.length) : absolutePath;

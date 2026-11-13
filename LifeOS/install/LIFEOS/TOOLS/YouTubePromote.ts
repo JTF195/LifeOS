@@ -59,7 +59,7 @@
  * the machine's local date and says so.
  */
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { invariant } from "./Invariant.ts";
 import { getClaudeDir, lifeosPath } from "./Paths";
 
@@ -543,7 +543,7 @@ function loadLogo(flag?: string): string | undefined {
   let path = flag;
   if (!path && existsSync(CONFIG_PATH)) path = JSON.parse(readFileSync(CONFIG_PATH, "utf-8")).logoPath;
   if (!path) return undefined;
-  const resolved = path.startsWith("/") ? path : lifeosPath(...path.split("/"));
+  const resolved = isAbsolute(path) ? path : lifeosPath(...path.split("/"));
   if (!existsSync(resolved)) throw new Error(`logo not found: ${resolved}`);
   return readFileSync(resolved).toString("base64");
 }

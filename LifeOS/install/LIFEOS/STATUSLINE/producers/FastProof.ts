@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { mtime, type Cache } from "../Cache";
 import { invariant } from "../../TOOLS/Invariant";
 import type { RefreshJob } from "./Background";
@@ -60,7 +60,7 @@ export function fastProofRefresh(cache: Cache, paths: FastPaths = fastPaths(), d
         cache.put(FAILED_STAMP, `${cache.now}\n`);
         throw new Error(`statusline-fast parity test failed; Bun renders every run until it passes: ${result.detail}`);
       }
-      invariant(paths.proof.startsWith(`${paths.statusline}/`) && existsSync(paths.binary), "a passing proof stamps a built binary inside STATUSLINE");
+      invariant(paths.proof.startsWith(`${paths.statusline}${sep}`) && existsSync(paths.binary), "a passing proof stamps a built binary inside STATUSLINE");
       writeFileSync(paths.proof, `${new Date().toISOString()}\n`, { mode: 0o600 });
     },
   };

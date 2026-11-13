@@ -153,7 +153,9 @@ export function isDeniedPath(p: string): boolean {
   const physical = physicalPath(p);
   if (physical) cands.push(physical);
   try { cands.push(realpathSync(absUnfolded(p))); } catch { /* may not exist yet */ }
-  return DENY_PATHS.some((re) => cands.some((c) => re.test(c)));
+  // The deny patterns use "/" separators; native candidates use "\\" on Windows, so they are tested in "/" form.
+  const slashed = cands.map((c) => c.replace(/\\/g, "/"));
+  return DENY_PATHS.some((re) => slashed.some((c) => re.test(c)));
 }
 
 /**
@@ -512,7 +514,8 @@ export function commandRefusal(argv: string[], scriptRoots: string[], allow: Too
     if (!existsSync(script)) return `script not found: ${script}`;
     if (!isUnder(script, scriptRoots)) return `script outside allowed roots: ${script}`;
     const real = realpathSync(script);
-    if (DENY_SCRIPTS.some((re) => re.test(script) || re.test(real))) return `script is never runnable from a job: ${script}`;
+    const scriptForms = [script, real].map((c) => c.replace(/\\/g, "/")); // deny patterns use "/" separators
+    if (DENY_SCRIPTS.some((re) => scriptForms.some((c) => re.test(c)))) return `script is never runnable from a job: ${script}`;
     // A directory the model can write to is never an executable root, whatever else contains it.
     if (writableRoots.length && isUnder(real, writableRoots)) return `script sits in a writable job directory and is never runnable: ${script}`;
     const allowed = (allow.scripts ?? []).some((s) => allowlistIdentities(s, scriptRoots).includes(real));

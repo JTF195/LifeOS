@@ -15,7 +15,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, statSync, renameSync, readdirSync, mkdtempSync, rmSync, realpathSync } from "node:fs";
-import { resolve, dirname, basename, join } from "node:path";
+import { resolve, dirname, basename, join, sep } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { homedir, tmpdir } from "node:os";
 import { parseIsaClaimsText, isaBody, claimText, stripBulletPrefix } from "./lib/IsaClaims";
@@ -693,11 +693,11 @@ function srcRefusal(src: string): string | null {
   if (SECRET_FILE.test(src)) return "names a secrets file";
   for (const root of exhibitRoots) {
     const full = resolve(root, src);
-    if (!full.startsWith(root + "/")) return "points outside the ISA's folders";
+    if (!full.startsWith(root + sep)) return "points outside the ISA's folders";
     if (!existsSync(full)) continue;
     try {
       const real = realpathSync(full);
-      if (!exhibitRoots.some((r) => real.startsWith(realpathSync(r) + "/"))) return "resolves outside the ISA's folders";
+      if (!exhibitRoots.some((r) => real.startsWith(realpathSync(r) + sep))) return "resolves outside the ISA's folders";
       if (SECRET_LINE.test(readFileSync(real, "utf-8"))) return "holds a line that looks like a secret";
     } catch { return "could not be read"; }
     return null;

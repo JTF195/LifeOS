@@ -58,7 +58,7 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, unlinkSync, chmodSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { invariant } from "./Invariant.ts";
@@ -296,7 +296,7 @@ export function claudeToolFlags(job: Pick<Job, "allow" | "allowedTools">, root =
   const tools = ["Read", "Grep", "Glob", "Bash"];
   const stateDirs: string[] = [];
   if (stateDir) {
-    invariant(stateDir.startsWith("/") && !stateDir.includes(".."), "the job state dir is an absolute real path");
+    invariant(isAbsolute(stateDir) && !stateDir.includes(".."), "the job state dir is an absolute real path");
     tools.push("Write", "Edit");
     allowed.push(`Write(/${stateDir}/**)`, `Edit(/${stateDir}/**)`);
     stateDirs.push("--add-dir", stateDir);

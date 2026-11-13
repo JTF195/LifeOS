@@ -33,7 +33,7 @@
  * Exit codes: 0 clean / applied, 1 findings or a failed file, 2 usage.
  */
 import { existsSync, lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, resolve, sep } from "node:path";
 import { invariant } from "../../TOOLS/Invariant.ts";
 
 /* ── Types ──────────────────────────────────────────────────────────────── */
@@ -803,10 +803,11 @@ export function planScope(scope: string | undefined, roots: ResidueRoots): Scope
   if (scope === undefined) return { parts: [{ repo: "system", prefix: "" }, { repo: "user", prefix: "" }, { repo: "fleet", prefix: "" }], skip: none };
   if (scope === "fleet") return { parts: [{ repo: "fleet", prefix: "" }], skip: none };
   if (scope === "user") return { parts: [{ repo: "user", prefix: "" }], skip: (repo, rel) => repo === "user" && underPrefix(rel, "SOCRATES") };
-  const clean = (p: string) => p.replace(/^\.\//, "").replace(/\/+$/, "");
+  // Prefixes are matched against git's forward-slash paths, so native separators (win32) become "/" here.
+  const clean = (p: string) => p.replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "");
   const fleet = real(roots.fleet), user = real(roots.user), system = real(roots.system);
   const route = (abs: string): { repo: RepoName; rel: string } | null => {
-    const inside = (root: string) => abs === root || abs.startsWith(`${root}/`);
+    const inside = (root: string) => abs === root || abs.startsWith(root + sep);
     // Most specific first: the fleet repo sits inside the USER tree.
     if (inside(fleet)) return { repo: "fleet", rel: abs.slice(fleet.length + 1) };
     if (inside(user)) return { repo: "user", rel: abs.slice(user.length + 1) };
@@ -814,7 +815,7 @@ export function planScope(scope: string | undefined, roots: ResidueRoots): Scope
     return null;
   };
   let target: { repo: RepoName; rel: string } | null;
-  if (scope.startsWith("/")) {
+  if (isAbsolute(scope)) {
     target = route(real(scope));
     if (!target) throw new Error(`scope ${scope} is outside the three repos`);
   } else {

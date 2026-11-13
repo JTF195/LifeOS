@@ -523,7 +523,7 @@ export function listTranscripts(root: string): string[] {
 /** Lines of one transcript, read whole (transcripts are processed one at a time per worker). */
 export async function processFile(path: string): Promise<FileResult> {
   const text = await Bun.file(path).text();
-  return processLines(text.split("\n"), path.includes("/subagents/"));
+  return processLines(text.split("\n"), path.replace(/\\/g, "/").includes("/subagents/"));
 }
 
 // ── Sampling ──────────────────────────────────────────────────────────────────

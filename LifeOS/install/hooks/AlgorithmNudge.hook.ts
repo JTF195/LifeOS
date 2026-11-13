@@ -106,7 +106,7 @@ const ROUTE_COOLDOWN_MS = 60 * 60 * 1000;  // per-skill routing cooldown
 const INDEX_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 const ROUTING_LOG_CAP_BYTES = 512_000;     // telemetry stops appending past this (Forge audit)
 const ROUTE_MAX_MATCHES = 6;               // more matches than this = generic prompt = noise
-const ISA_PATH_RE = /(?:^|\/)(?:ISA\.md|bunker\.isa\.md)$/i;
+const ISA_PATH_RE = /(?:^|[\\/])(?:ISA\.md|bunker\.isa\.md)$/i;
 /** Exported for the L-A coverage gap: a break here makes stale-isa fire forever. */
 export const ISA_PATH_RE_FOR_TEST = ISA_PATH_RE;
 /**
@@ -164,7 +164,7 @@ export const DESTRUCTIVE_INFRA_RE = new RegExp([
 // `## Ideal State`, or the legacy standalone `## Articulation`). Within the
 // bounding rule: an on-disk section's existence is the unwritten/stale-ISA
 // state class. Once per file per session (24h cooldown).
-const PROJECT_ISA_RE = /(?:^|\/)ISA\.md$/;
+const PROJECT_ISA_RE = /(?:^|[\\/])ISA\.md$/;
 const ARTICULATION_RE = /^###\s+L1\b|^##\s+Articulation\s*$/m;
 const ARTICULATION_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const ARTICULATION_NUDGE = 'This project ISA has no L1 in its `## Ideal State` ladder — its describe-it-in-text ideal state was never written down (ISAFormat v2.28.0). Direction comes first: before building further, write the ladder (`bun LIFEOS/TOOLS/IsaLadder.ts migrate <isa> --full` drafts it from the ISA\'s own text), run Skill("ISA","discuss <isa> discover") so the principal confirms or corrects the draft in recommended-answer rounds (criterion 6, v8.41.0), and Skill("ISA","restate") so the principal confirms L3 and L2 (criterion 1).';
@@ -957,7 +957,7 @@ export function run(input: HookInput): string | null {
       // bunker.isa.md health contracts (filename mismatch by construction).
       if (isISAEdit
         && PROJECT_ISA_RE.test(filePath)
-        && !filePath.includes('/MEMORY/WORK/')
+        && !/[\\/]MEMORY[\\/]WORK[\\/]/.test(filePath)
         && cooled(state, `articulation:${filePath}`, now, ARTICULATION_COOLDOWN_MS)) {
         try {
           const isaBody = readFileSync(filePath, 'utf-8');

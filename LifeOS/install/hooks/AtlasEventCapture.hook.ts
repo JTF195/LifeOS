@@ -46,8 +46,8 @@ if (tool === "Bash") {
   // ported from public PR #1743, @schmetti-dev
   if (/systemctl\s+--user\s+(enable|disable|start|stop|daemon-reload)/.test(cmd)) sources.add("systemd");
 } else if (["Write", "Edit", "MultiEdit"].includes(tool)) {
-  if (/\/PROJECTS\.md$/.test(filePath)) sources.add("projects");
-  if (/\/GEAR\.md$/.test(filePath)) sources.add("gear");
+  if (/[\\/]PROJECTS\.md$/.test(filePath)) sources.add("projects");
+  if (/[\\/]GEAR\.md$/.test(filePath)) sources.add("gear");
   if (/infra-inventory\.ts$/.test(filePath)) sources.add("infra-inventory");
   if (/Library\/LaunchAgents\/com\.(lifeos|pai)\./.test(filePath)) sources.add("launchd");
   // Linux sibling — a unit file edited directly under systemd's user dir.

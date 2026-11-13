@@ -202,7 +202,7 @@ export function scannedFiles(skillsDir: string, only: string | null): Set<string
   } catch (e: any) {
     if (e.status !== 1) throw new Error(`rg --files failed, so the scanned set is unknown: ${String(e?.stderr || e?.message || "").trim().slice(0, 200)}`);
   }
-  return new Set(out.split("\n").filter(Boolean).map((f) => f.replace(/^\.\//, "")));
+  return new Set(out.split("\n").filter(Boolean).map((f) => f.replace(/\\/g, "/").replace(/^\.\//, "")));
 }
 
 function runRg(patternFile: string, patternTag = "deny-list"): Violation[] {
@@ -224,14 +224,14 @@ function runRg(patternFile: string, patternTag = "deny-list"): Violation[] {
     // A binary file reports one line with no line number: `<path>: binary file matches (found "\0" byte ...)`.
     const bin = line.match(/^(.+?): binary file matches \(/);
     if (bin) {
-      violations.push({ file: bin[1].replace(/^\.\//, ""), line: 1, pattern: patternTag, excerpt: `${patternTag} match in a binary file (content withheld)` });
+      violations.push({ file: bin[1].replace(/\\/g, "/").replace(/^\.\//, ""), line: 1, pattern: patternTag, excerpt: `${patternTag} match in a binary file (content withheld)` });
       continue;
     }
     // [\s\S]: a matched line may hold a \r (a CRLF file) or U+2028, which `.` refuses, and the match was then dropped.
     const m = line.match(/^(.+?):(\d+):[\s\S]*$/);
     // Any other line is a match the gate cannot place: cannot-verify, never a silent pass, and never echoed (S105).
     if (!m) fail("rg printed a line the gate cannot read, so a match may be unreported (content withheld)");
-    const file = m[1].replace(/^\.\//, "");
+    const file = m[1].replace(/\\/g, "/").replace(/^\.\//, ""); // rg prints native separators on Windows
     // The matched line is the private content this gate exists to keep from spreading: report where and
     // which class, never the text (S105). The reader opens file:line.
     violations.push({ file, line: parseInt(m[2], 10), pattern: patternTag, excerpt: `${patternTag} match (line content withheld)` });
@@ -340,7 +340,7 @@ export function unscannedSymlinks(dirArg: string, only: string | null, tracked: 
     for (const f of listed) {
       const phys = confinedPath(skillsDir, f);
       if (phys === null) return "symlink reaches content outside skills/ through a nested link: it is never scanned; copy the content in or remove the link";
-      reached.push(relative(root, phys));
+      reached.push(relative(root, phys).split(sep).join("/"));
     }
     if (reached.every((f) => scanned.has(f))) return null;
     if (only && confinedPath(join(skillsDir, only), link) === null) return "symlink points outside the --skill scope: this run never scans its target; copy the content in or remove the link";

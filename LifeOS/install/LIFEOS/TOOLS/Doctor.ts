@@ -38,7 +38,7 @@
  */
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync, readdirSync, statSync, lstatSync, readlinkSync, realpathSync } from 'fs';
-import { join, basename, delimiter } from 'path';
+import { join, basename, delimiter, sep } from 'path';
 import { createHash, randomBytes } from 'crypto';
 import { homedir } from "node:os";
 import { userDataRoot } from './lib/ForeignDataCheck';
@@ -246,10 +246,10 @@ function registryRoots(): string[] {
   try { text = readFileSync(registry, 'utf8'); } catch { return []; }
   const out: string[] = [];
   for (const m of text.matchAll(/`(~\/[^`]+)`/g)) {
-    const expanded = join(HOME, m[1].slice(2)).replace(/\/+$/, '');
+    const expanded = join(HOME, m[1].slice(2)).replace(/[\\/]+$/, '');
     // Registry cells also name files and non-existent planned paths; only real
     // directories are searchable, and only ones actually under $HOME.
-    if (!expanded.startsWith(HOME + '/')) continue;
+    if (!expanded.startsWith(HOME + sep)) continue;
     try { if (statSync(expanded).isDirectory()) out.push(expanded); } catch {}
   }
   return out;
@@ -270,14 +270,14 @@ function shadowSearchRoots(): { roots: string[]; skipped: string[] } {
   const roots: string[] = [];
   const skipped: string[] = [];
   for (const c of candidates) {
-    const path = c.replace(/\/+$/, '');
-    const rel = path === HOME ? '' : path.startsWith(HOME + '/') ? path.slice(HOME.length + 1) : path;
-    if (TCC_PROTECTED.includes(rel.split('/')[0])) { if (!skipped.includes(path)) skipped.push(path); continue; }
+    const path = c.replace(/[\\/]+$/, '');
+    const rel = path === HOME ? '' : path.startsWith(HOME + sep) ? path.slice(HOME.length + 1) : path;
+    if (TCC_PROTECTED.includes(rel.split(sep)[0])) { if (!skipped.includes(path)) skipped.push(path); continue; }
     if (!existsSync(path)) continue;
     // Drop exact duplicates and any root already covered by an ancestor root.
-    if (roots.some(r => path === r || path.startsWith(r + '/'))) continue;
+    if (roots.some(r => path === r || path.startsWith(r + sep))) continue;
     // A new root may itself be the ancestor of ones already collected.
-    for (let i = roots.length - 1; i >= 0; i--) if (roots[i].startsWith(path + '/')) roots.splice(i, 1);
+    for (let i = roots.length - 1; i >= 0; i--) if (roots[i].startsWith(path + sep)) roots.splice(i, 1);
     roots.push(path);
   }
   return { roots, skipped };
@@ -609,7 +609,7 @@ const CAPS: CapSpec[] = [
       const rootReal = real(dataRoot) ?? dataRoot;
       // Both the resolved and the lexical tree root: a not-yet-created target
       // under a symlinked prefix (/var on macOS) only matches the lexical form.
-      const selfLink = [lifeosReal, LIFEOS_DIR].some(root => rootReal === root || rootReal.startsWith(root + '/'));
+      const selfLink = [lifeosReal, LIFEOS_DIR].some(root => rootReal === root || rootReal.startsWith(root + sep));
       if (selfLink) dataRoot = join(HOME, '.config', 'LIFEOS', 'USER');
       const broken: string[] = [];
       const fixes: string[] = [];

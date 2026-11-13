@@ -20,7 +20,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { homedir } from "node:os";
 import { mirrorAll } from "./HeaderMirror";
 import { getClaudeDir } from "./Paths"; // public issue #1974 @sabo961, PR #1918 @PigLardLord
@@ -153,7 +153,7 @@ export function watchedSourceFiles(): string[] {
 
   const unique = new Set<string>();
   files.forEach((file) => {
-    if (!file.includes(`${USER_DIR}/Backups/`) && !file.includes(`${USER_DIR}/Archive/`)) {
+    if (!file.includes(join(USER_DIR, "Backups") + sep) && !file.includes(join(USER_DIR, "Archive") + sep)) {
       unique.add(file);
     }
   });

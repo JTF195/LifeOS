@@ -30,7 +30,7 @@ for (const __k of ["LIFEOS_DIR", "LIFEOS_CONFIG_DIR", "PROJECTS_DIR"]) {
  *   GET  /, /work, /telos, /health, etc. — Static Next.js pages (fallback handler)
  */
 
-import { join, extname } from "path"
+import { join, extname, isAbsolute, sep } from "path"
 import { readFileSync, readdirSync, existsSync, realpathSync, statSync, watch, openSync, readSync, closeSync, writeFileSync, renameSync, unlinkSync, chmodSync, type FSWatcher } from "fs"
 import { createHash } from "crypto"
 import { execFile, spawnSync } from "child_process"
@@ -214,7 +214,7 @@ function existsSafe(path: string): boolean {
 function getDashboardDir(): string {
   const dir = config.dashboard_dir ?? DEFAULT_DASHBOARD_DIR
   // Resolve relative paths against Pulse directory
-  if (!dir.startsWith("/")) {
+  if (!isAbsolute(dir)) {
     return join(HOME, ".claude", "LIFEOS", "PULSE", dir)
   }
   return dir
@@ -238,7 +238,7 @@ async function serveStaticFile(pathname: string): Promise<Response | null> {
 
   try {
     const file = Bun.file(filePath)
-    if (!extname(filePath) && filePath.endsWith("/")) return null
+    if (!extname(filePath) && (filePath.endsWith("/") || filePath.endsWith(sep))) return null
     const ext = extname(filePath)
     const headers: Record<string, string> = { "Content-Type": MIME[ext] || "application/octet-stream" }
     // No caching for any Observatory assets — ensures rebuilds are picked up immediately
@@ -3992,7 +3992,7 @@ function telosWriteTarget(dir: string, name: string): string | null {
   const dirReal = realpathSync(dir)
   const p = join(dir, name)
   const real = existsSync(p) ? realpathSync(p) : join(dirReal, name)
-  return real === join(dirReal, name) || real.startsWith(dirReal + "/") ? real : null
+  return real === join(dirReal, name) || real.startsWith(dirReal + sep) ? real : null
 }
 
 function readIfPresent(path: string): string | null {
@@ -4052,7 +4052,7 @@ function saveTelosFileLocked(dir: string, name: string, target: string, content:
   }
 
   const dirReal = realpathSync(dir)
-  invariant(target === join(dirReal, name) || target.startsWith(dirReal + "/"), `TELOS save target escaped the TELOS folder: ${name}`)
+  invariant(target === join(dirReal, name) || target.startsWith(dirReal + sep), `TELOS save target escaped the TELOS folder: ${name}`)
   invariant(sameSpans(regionSpans(content), regionSpans(current ?? "")), "TELOS save would change AUTOMATED region bytes")
   invariant(content.length <= TELOS_FILE_MAX_CHARS, "TELOS save exceeds the size limit")
 

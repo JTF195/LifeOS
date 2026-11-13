@@ -108,7 +108,7 @@ function stringsOf(v: unknown, out: string[] = [], depth = 0): string[] {
 /** The local file a string names (absolute, ~/ or relative to cwd), or null. */
 function fileNamed(s: string, cwd: string): string | null {
   if (!s || s.length > 1024 || s.includes("\n") || /^[a-z][a-z0-9+.-]*:\/\//i.test(s)) return null;
-  if (!(s.startsWith("/") || s.startsWith("~/") || s.startsWith("./") || s.startsWith("../") || /^[\w.-]+\/[\w./-]+$/.test(s) || /^[\w-]+(?:\.[\w-]+)*\.\w{1,8}$/.test(s))) return null;
+  if (!(isAbsolute(s) || s.startsWith("~/") || s.startsWith("./") || s.startsWith("../") || /^[\w.-]+\/[\w./-]+$/.test(s) || /^[\w-]+(?:\.[\w-]+)*\.\w{1,8}$/.test(s))) return null;
   const x = s.replace(/^~(?=\/|$)/, homedir());
   const abs = isAbsolute(x) ? x : resolve(cwd, x);
   try { return statSync(abs).isFile() ? abs : null; } catch { return null; }

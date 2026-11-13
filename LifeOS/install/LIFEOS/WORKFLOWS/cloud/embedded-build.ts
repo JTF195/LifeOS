@@ -29,7 +29,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { BunPlugin } from "bun";
 import { invariant } from "../../TOOLS/Invariant.ts";
 
@@ -199,7 +199,7 @@ export async function buildEmbedded(outDir: string = EMBEDDED_OUT_DIR, opts: Emb
   const lifeosInputs = inputs
     .filter(p => !p.startsWith(`${DENY_NAMESPACE}:`))
     .map(p => resolve(p))
-    .filter(p => !p.includes("/node_modules/") && p.startsWith(LIFEOS_DIR + "/"));
+    .filter(p => !/[\\/]node_modules[\\/]/.test(p) && p.startsWith(LIFEOS_DIR + sep));
   const sourceHashes: Record<string, string> = {};
   for (const path of lifeosInputs) {
     const hash = compiled.get(path);

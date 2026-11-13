@@ -192,7 +192,7 @@ export function deliveryRoots(home: string = homedir(), opts: { configFile?: str
   }
   const existing = [...new Set(paths)].filter(isDir);
   // A root inside another root is walked by the parent: dropping it keeps one file from being counted twice.
-  const kept = existing.filter((p) => !existing.some((o) => o !== p && p.startsWith(o + "/")));
+  const kept = existing.filter((p) => !existing.some((o) => o !== p && p.startsWith(o + sep)));
   return kept.map((path) => ({ channel: channelFor(path, home), path }));
 }
 
@@ -228,7 +228,7 @@ export function scanDelivery(a: readonly DeliveryRoot[] | ScanOptions, keepArg?:
   // Scopes (units) in which a partial-download name is still too fresh to count: hot mode holds those units' stamps so the file is looked at again.
   const freshTransientScopes = new Set<string>();
   const rootDepthOf = (p: string): number => {
-    const r = allRoots.find((x) => p === x.path || p.startsWith(x.path + "/"));
+    const r = allRoots.find((x) => p === x.path || p.startsWith(x.path + sep));
     return r ? (p === r.path ? 0 : relative(r.path, p).split(sep).length) : 0;
   };
 
@@ -458,9 +458,9 @@ export function namedDirInsideRoot(path: string, roots: readonly DeliveryRoot[],
     if (lstat(path).isSymbolicLink()) return false;
     const real = realpathSync(path);
     return roots.some((r) => {
-      if (path !== r.path && !path.startsWith(r.path + "/")) return false;
+      if (path !== r.path && !path.startsWith(r.path + sep)) return false;
       const rootReal = realpathSync(r.path);
-      return real === rootReal || real.startsWith(rootReal + "/");
+      return real === rootReal || real.startsWith(rootReal + sep);
     });
   } catch {
     return false;
@@ -469,6 +469,6 @@ export function namedDirInsideRoot(path: string, roots: readonly DeliveryRoot[],
 
 /** True when `path` sits inside a root; the channel of the first such root, else null. */
 export function channelOfPath(path: string, roots: readonly DeliveryRoot[]): string | null {
-  for (const r of roots) if (path.startsWith(r.path + "/")) return r.channel;
+  for (const r of roots) if (path.startsWith(r.path + sep)) return r.channel;
   return null;
 }

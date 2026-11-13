@@ -13,7 +13,7 @@
  * @version 1.1.0
  */
 import { appendFileSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { invariant } from "../TOOLS/Invariant";
 import { lifeosPath } from "../TOOLS/Paths";
 
@@ -35,7 +35,7 @@ function insideStore(path: string): boolean {
   const root = realpathSync(reviewDir());
   mkdirSync(dirname(path), { recursive: true });
   const parent = realpathSync(dirname(resolve(path)));
-  return parent === root || parent.startsWith(root + "/");
+  return parent === root || parent.startsWith(root + sep);
 }
 
 export function writeJson(path: string, value: unknown): void {

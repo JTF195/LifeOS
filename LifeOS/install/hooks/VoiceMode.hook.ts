@@ -12,7 +12,7 @@
  * Doc: LIFEOS/DOCUMENTATION/VoiceMode/VoiceMode.md
  */
 
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { instruction, isOn } from "../LIFEOS/TOOLS/VoiceMode";
 import { PULSE_BASE } from "../LIFEOS/PULSE/endpoint";
 import { readRegistry } from "./lib/isa-utils";
@@ -36,7 +36,7 @@ export function sessionIsaPath(sessionId: string, sessions: Record<string, any> 
     return act || at(b) - at(a);
   });
   const isa = String((rows[0] as any).isa);
-  return isa.startsWith("/") ? isa : join(LIFEOS_ROOT, isa);
+  return isAbsolute(isa) ? isa : join(LIFEOS_ROOT, isa);
 }
 
 export async function onPrompt(

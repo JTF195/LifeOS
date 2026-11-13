@@ -225,7 +225,7 @@ function buildContextSummary(messages: TranscriptMessage[]): string {
  * Generate a descriptive 4-8 word title based on the changes.
  */
 function generateDescriptiveTitle(changes: FileChange[]): string {
-  const paths = changes.map(c => c.path);
+  const paths = changes.map(c => c.path.replace(/\\/g, '/')); // transcript paths are native (backslashes on Windows)
 
   // Extract skill names
   const skillNames = new Set<string>();

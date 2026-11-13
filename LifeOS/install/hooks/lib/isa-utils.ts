@@ -21,7 +21,7 @@
 // before the rename. New sessions always write ISA.md.
 
 import { writeFileSync, readFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync } from 'fs';
-import { join, basename } from 'path';
+import { join, basename, sep } from 'path';
 import { createHash } from 'crypto';
 import { parseIsaClaimsText, isaBody, claimText, stripBulletPrefix, BRIDGE_HEADING_RE } from '../../LIFEOS/TOOLS/lib/IsaClaims';
 import { lifeosPath } from './paths';
@@ -759,7 +759,8 @@ export function writeRegistry(reg: { sessions: Record<string, any> }, src?: stri
 export function syncToWorkJson(fm: Record<string, string>, isaPath: string, content?: string, sessionId?: string): void {
   if (!fm.slug) return;
   const lifeosDir = lifeosPath();
-  const relativeIsa = isaPath.replace(lifeosDir + '/', '');
+  // Stored with "/" on every platform (native path on Windows), as readers split it on "/".
+  const relativeIsa = isaPath.replace(lifeosDir + sep, '').split(sep).join('/');
   const registry = readRegistry();
 
   // Wave 1 (2026-05-23): frontmatter field-name normalization. ISAs in the wild
@@ -1096,10 +1097,10 @@ const BUMP_DEBOUNCE_MS = 30 * 1000;
  */
 export function slugFromPath(filePath: string): string | null {
   if (!filePath) return null;
-  const workDir = lifeosPath('MEMORY', 'WORK') + '/';
+  const workDir = lifeosPath('MEMORY', 'WORK') + sep;
   if (!filePath.startsWith(workDir)) return null;
   const rest = filePath.slice(workDir.length);
-  const slug = rest.split('/')[0];
+  const slug = rest.split(sep)[0];
   return slug || null;
 }
 

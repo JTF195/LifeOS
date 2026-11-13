@@ -25,7 +25,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { invariant } from "./Invariant";
 import { changedCriteria, CRITERION_ID, governingIsa, isCodeFile } from "./IsaGoverning";
@@ -116,7 +116,7 @@ export function isaProblem(root: string, from: string | null, iscs: string[] = [
     for (const f of c.files) {
       if (!isCodeFile(join(repo, f))) continue;
       const isa = governingIsa(join(repo, f));
-      if (!isa || !(isa === repo || isa.startsWith(repo + "/"))) continue;
+      if (!isa || !(isa === repo || isa.startsWith(repo + sep))) continue;
       if (!owed.has(isa)) owed.set(isa, new Set());
       owed.get(isa)!.add(f);
     }
@@ -197,10 +197,12 @@ export function readVersion(root: string): { version: string | null; file: Statu
  */
 export function recordRoot(dir: string): string {
   const repo = repoRoot(dir);
+  // git prints "/" paths on Windows; d is a native realpath, so compare against the repo's native realpath.
+  const repoReal = process.platform === "win32" ? realpathSync(resolve(repo)) : repo;
   let d = realpathSync(resolve(dir));
-  while (d === repo || d.startsWith(repo + "/")) {
+  while (d === repoReal || d.startsWith(repoReal + sep)) {
     if (readVersion(d).version !== null) return d;
-    if (d === repo) break;
+    if (d === repoReal) break;
     d = dirname(d);
   }
   return repo;

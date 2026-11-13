@@ -503,16 +503,17 @@ function smokeTest(): number {
   check("memory(assistant) → DA_MEMORY.md", memAssistant === DA_MEMORY_PATH, memAssistant);
 
   // 6. Path resolution — knowledge routes by entity_type subdir
+  const fwd = (p: string) => p.replace(/\\/g, "/"); // resolved paths are native (backslashes on Windows)
   const kPerson = resolveStoragePath({ type: "knowledge", entity_type: "person", name: "Some Person", content: "..." });
-  check("knowledge(person) → KNOWLEDGE/People/", kPerson.endsWith("/MEMORY/KNOWLEDGE/People/some-person.md"), kPerson);
+  check("knowledge(person) → KNOWLEDGE/People/", fwd(kPerson).endsWith("/MEMORY/KNOWLEDGE/People/some-person.md"), kPerson);
   const kCompany = resolveStoragePath({ type: "knowledge", entity_type: "company", name: "Anthropic", content: "..." });
-  check("knowledge(company) → KNOWLEDGE/Companies/", kCompany.endsWith("/MEMORY/KNOWLEDGE/Companies/anthropic.md"), kCompany);
+  check("knowledge(company) → KNOWLEDGE/Companies/", fwd(kCompany).endsWith("/MEMORY/KNOWLEDGE/Companies/anthropic.md"), kCompany);
   const kResearch = resolveStoragePath({ type: "knowledge", entity_type: "research", name: "Honcho Paper", content: "..." });
-  check("knowledge(research) → KNOWLEDGE/Research/", kResearch.endsWith("/MEMORY/KNOWLEDGE/Research/honcho-paper.md"), kResearch);
+  check("knowledge(research) → KNOWLEDGE/Research/", fwd(kResearch).endsWith("/MEMORY/KNOWLEDGE/Research/honcho-paper.md"), kResearch);
 
   // 7. Path resolution — idea routes to KNOWLEDGE/Ideas/
   const idea = resolveStoragePath({ type: "idea", title: "Single Memory System Insight", content: "..." });
-  check("idea → KNOWLEDGE/Ideas/", idea.endsWith("/MEMORY/KNOWLEDGE/Ideas/single-memory-system-insight.md"), idea);
+  check("idea → KNOWLEDGE/Ideas/", fwd(idea).endsWith("/MEMORY/KNOWLEDGE/Ideas/single-memory-system-insight.md"), idea);
 
   // 8. Path resolution — proposal always goes to pending-proposals.jsonl
   const prop = resolveStoragePath({

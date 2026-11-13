@@ -62,7 +62,7 @@
 import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { createHash, randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { join, dirname, resolve } from "node:path";
+import { join, dirname, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { getClaudeDir } from "./Paths";
 import { invariant } from "./Invariant";
@@ -795,7 +795,7 @@ export function deployedStatement(repo: string, commit: string | null, deploysPa
       const d = JSON.parse(line) as { ts?: unknown; dir?: unknown; head?: unknown };
       if (typeof d.dir !== "string" || typeof d.head !== "string" || !/^[0-9a-f]{7,40}$/.test(d.head)) continue;
       const dir = existsSync(d.dir) ? realpathSync(d.dir) : resolve(d.dir);
-      if (dir === root || dir.startsWith(`${root}/`)) last = { ts: typeof d.ts === "string" ? d.ts : "", head: d.head };
+      if (dir === root || dir.startsWith(root + sep)) last = { ts: typeof d.ts === "string" ? d.ts : "", head: d.head };
     } catch { /* a torn or foreign line is skipped */ }
   }
   if (!last) return `fixing commit ${commit.slice(0, 9)}; no deploy of this repo is recorded, so it is not known to be live`;

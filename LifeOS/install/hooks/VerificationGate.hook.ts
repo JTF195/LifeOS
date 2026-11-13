@@ -306,7 +306,7 @@ export function artifactClaimPaths(message: string): string[] {
 
 function resolveArtifactPath(p: string, cwd: unknown): string | null {
   if (p.startsWith("~/")) return join(homedir(), p.slice(2));
-  if (p.startsWith("/")) return p;
+  if (isAbsolute(p)) return p;
   return typeof cwd === "string" && cwd ? join(cwd, p) : null; // bare relative with no cwd: unknowable, skip
 }
 

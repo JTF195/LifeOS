@@ -23,7 +23,7 @@
 
 import { readFileSync, existsSync, writeFileSync, statSync, realpathSync, mkdirSync, renameSync, lstatSync, readlinkSync, mkdtempSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { homedir, tmpdir } from 'node:os';
 import { parseFrontmatter, parseCriteriaList, ARTIFACT_FILENAME, LEGACY_ARTIFACT_FILENAME } from './lib/isa-utils';
 import { isForeignToSystemRepo, looksLikePersonalTranscript } from '../LIFEOS/TOOLS/lib/ForeignDataCheck';
@@ -91,7 +91,7 @@ export function saveState(stateFile: string, state: CheckpointState, allowedRoot
   try {
     const realDir = realpathSync(dirname(stateFile));
     const realRoot = realpathSync(allowedRoot);
-    invariant(realDir === realRoot || realDir.startsWith(realRoot + '/'), `checkpoint state dir ${realDir} is outside ${realRoot}`);
+    invariant(realDir === realRoot || realDir.startsWith(realRoot + sep), `checkpoint state dir ${realDir} is outside ${realRoot}`);
     const target = join(realDir, basename(stateFile));
     const tmp = `${target}.${process.pid}.${Date.now()}.tmp`;
     writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n', { encoding: 'utf-8', flag: 'wx', mode: 0o600 });
@@ -276,7 +276,7 @@ export function candidatePaths(repo: string, isaPath: string, sidecar: string, m
   for (const p of [isaPath, sidecar, ...(mine ?? [])]) {
     for (const base of new Set([realRepo, repo])) {
       const rel = relative(base, p);
-      if (rel && rel !== '..' && !rel.startsWith('..' + '/') && !isAbsolute(rel)) { out.add(rel); break; }
+      if (rel && rel !== '..' && !rel.startsWith('..' + sep) && !isAbsolute(rel)) { out.add(rel); break; }
     }
   }
   return [...out];
@@ -441,7 +441,7 @@ async function main(input: any) {
   let realWorkDir = workDir;
   try { realSlugDir = realpathSync(slugDir); } catch { /* existence checked above; keep lexical */ }
   try { realWorkDir = realpathSync(workDir); } catch { /* no WORK dir: nothing is inside it */ }
-  const isInWorkDir = realSlugDir.startsWith(realWorkDir + '/');
+  const isInWorkDir = realSlugDir.startsWith(realWorkDir + sep);
   const stateDir = lifeosPath('MEMORY', 'STATE', 'checkpoints');
   if (!isInWorkDir) mkdirSync(stateDir, { recursive: true });
   const stateFile = isInWorkDir

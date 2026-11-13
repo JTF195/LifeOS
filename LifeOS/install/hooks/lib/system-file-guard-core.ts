@@ -19,10 +19,10 @@
  */
 
 import { readFileSync, existsSync, realpathSync, lstatSync, readlinkSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, parse, resolve } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
-import { isContained, isPatternAllowlisted, relativeToClaudeRoot } from "./containment-zones";
+import { isContained, isPatternAllowlisted, relativeToClaudeRoot, winFwd } from "./containment-zones";
 import { getClaudeDir } from "./paths";
 
 /**
@@ -45,8 +45,10 @@ export function guardRoots(): string[] {
 /** The most specific guarded root containing `absolutePath`, or null when it is out of every tree. */
 export function rootFor(absolutePath: string): string | null {
   let best: string | null = null;
+  const p = winFwd(absolutePath); // Windows: compare in the "/" spelling
   for (const root of guardRoots()) {
-    const inside = absolutePath === root || absolutePath.startsWith(root + "/");
+    const r = winFwd(root);
+    const inside = p === r || p.startsWith(r + "/");
     if (inside && (best === null || root.length > best.length)) best = root;
   }
   return best;
@@ -169,7 +171,17 @@ const MAX_LINK_HOPS = 40;
 
 /** Path components as written: empty and `.` segments dropped, `..` KEPT for the physical walk. */
 function rawComponents(p: string): string[] {
-  return p.split("/").filter((c) => c !== "" && c !== ".");
+  return p.split(process.platform === "win32" ? /[\\/]/ : "/").filter((c) => c !== "" && c !== ".");
+}
+
+/**
+ * Windows only: split an absolute path into its root in the walk's "/" spelling ("C:/", "//host/share/")
+ * and the rest, which is still in the caller's spelling. A rooted path with no drive ("\x") takes the cwd's drive.
+ */
+function splitWinRoot(p: string): { root: string; rest: string } {
+  const raw = parse(p).root;
+  const root = /^[\\/]$/.test(raw) ? parse(process.cwd()).root : raw;
+  return { root: winFwd(root), rest: p.slice(raw.length) };
 }
 
 /**
@@ -186,15 +198,18 @@ function rawComponents(p: string): string[] {
  */
 export function realpathDeepest(p: string): string | null {
   if (!p) return null;
+  const win = process.platform === "win32";
   const start = isAbsolute(p) ? p : `${process.cwd()}/${p}`;
-  const queue = rawComponents(start);
-  let cur = "/";
+  // Windows: the walk runs in one spelling, "/" with the drive root ("C:/"), the same spelling as classifyForms.
+  const startRoot = win ? splitWinRoot(start) : null;
+  const queue = rawComponents(startRoot ? startRoot.rest : start);
+  let cur = startRoot ? startRoot.root : "/";
   let exists = true;
   let hops = 0;
   while (queue.length > 0) {
     const c = queue.shift()!;
     if (c === "..") { cur = dirname(cur); continue; } // `cur` is physical while `exists`: its dirname is the real parent
-    const next = cur === "/" ? `/${c}` : `${cur}/${c}`;
+    const next = cur.endsWith("/") ? `${cur}${c}` : `${cur}/${c}`; // a root ("/", "C:/") already ends in "/"
     if (!exists) { cur = next; continue; }
     let isLink = false;
     try {
@@ -211,7 +226,11 @@ export function realpathDeepest(p: string): string | null {
     let target: string;
     try { target = readlinkSync(next); } catch { return null; }
     // The link's target replaces it; a relative target resolves from the link's own directory (`cur`).
-    if (isAbsolute(target)) cur = "/";
+    if (win) target = target.replace(/^(?:\\\\\?\\|\\\?\?\\)(?=[A-Za-z]:)/, ""); // drop a "\\?\" / "\??\" prefix
+    if (isAbsolute(target)) {
+      if (win) { const t = splitWinRoot(target); cur = t.root; target = t.rest; } // restarts at its own root
+      else cur = "/";
+    }
     queue.unshift(...rawComponents(target));
   }
   return cur;
@@ -232,14 +251,14 @@ export function classifyForms(
   claudeRoot?: string,
 ): { verdicts: Array<{ classification: GuardClassification; relPath: string }>; unresolved: boolean } {
   if (!path) return { verdicts: [], unresolved: false };
-  const lexical = resolve(path);
+  const lexical = winFwd(resolve(path));
   // The physical walk takes the path as written: `..` applies after each link is followed.
   const real = realpathDeepest(path);
   const targets = real && real !== lexical ? [lexical, real] : [lexical];
   const roots = claudeRoot ? [claudeRoot] : guardRoots();
   const rootForms = new Set<string>();
   for (const r of roots) {
-    rootForms.add(resolve(r));
+    rootForms.add(winFwd(resolve(r)));
     const rr = realpathDeepest(r);
     if (rr) rootForms.add(rr);
   }

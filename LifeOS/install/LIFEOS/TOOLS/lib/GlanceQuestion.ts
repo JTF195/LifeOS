@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve, isAbsolute } from "node:path";
+import { dirname, join, relative, resolve, isAbsolute, sep } from "node:path";
 import { isIP } from "node:net";
 import { addressClass } from "./SafeFetch.ts";
 import { touchesSecret, normalizeCommand } from "../../../hooks/lib/texting-guard-core.ts";
@@ -412,7 +412,7 @@ function checkProducer(producer: string, isaPath?: string): Producer {
       let canonical: string;
       try { canonical = realpathSync(resolve(root ?? process.cwd(), arg)); }
       catch { throw new Error(`producer denied bun scope: ${arg} does not resolve to a file`); }
-      const inside = (base: string | undefined) => !!base && (canonical === base || canonical.startsWith(`${base}/`));
+      const inside = (base: string | undefined) => !!base && (canonical === base || canonical.startsWith(base + sep));
       if (!inside(root) && !inside(toolsRoot)) {
         throw new Error("producer denied bun scope: a bun script must resolve inside the ISA directory or under LIFEOS/TOOLS");
       }

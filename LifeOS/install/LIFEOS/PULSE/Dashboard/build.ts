@@ -1,8 +1,8 @@
 import {mkdirSync,copyFileSync,existsSync,cpSync,rmSync,realpathSync} from 'node:fs';
-import {join} from 'node:path';
+import {basename,join} from 'node:path';
 import {invariant} from './model';
 const root=import.meta.dir,dist=join(root,'dist');
-invariant(root.endsWith('/Dashboard'),'build is scoped to Dashboard');
+invariant(basename(root)==='Dashboard','build is scoped to Dashboard');
 if(existsSync(dist)){invariant(realpathSync(dist)===dist,'dist must not be a symlink');rmSync(dist,{recursive:true})}
 mkdirSync(join(dist,'fonts'),{recursive:true});
 // The LifeOS font system only: Advocate (display), Concourse (text), Triplicate (labels).

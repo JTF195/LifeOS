@@ -48,7 +48,7 @@ export function isSubagentHookInput(input: unknown): boolean {
 export function isSubagentContext(input?: unknown): boolean {
   const projectDir = process.env.CLAUDE_PROJECT_DIR || '';
   return Boolean(
-    projectDir.includes('/.claude/Agents/') ||
+    /[\\/]\.claude[\\/]Agents[\\/]/.test(projectDir) ||
       process.env.CLAUDE_AGENT_TYPE ||
       process.env.CLAUDE_CODE_SUBAGENT_NAME ||
       process.env.CLAUDE_CODE_SUBAGENT_TYPE ||

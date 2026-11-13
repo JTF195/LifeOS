@@ -63,7 +63,7 @@ import { execFileSync, spawn, type ChildProcessWithoutNullStreams } from "node:c
 import { createInterface } from "node:readline";
 import { accessSync, constants, createWriteStream, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSync, unlinkSync, type WriteStream } from "node:fs";
 import { mkdir, readdir, readFile, rm, symlink } from "node:fs/promises";
-import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve, sep } from "node:path";
 import process from "node:process";
 import { CROSS_VENDOR } from "./models";
 import { observeRun, appendRun, summarize, type CodexRun } from "./CodexObserved";
@@ -390,10 +390,10 @@ function workMemoryDirs(cwd: string, lifeosDir: string): string[] {
     // own LIFEOS/MEMORY/WORK symlink gains nothing (Astra audit 2026-09-19, finding 10).
     const root = realpathSync(join(lifeosDir, ".."));
     const here = realpathSync(cwd);
-    if (here !== root && !here.startsWith(root + "/")) return [];
+    if (here !== root && !here.startsWith(root + sep)) return [];
     const real = realpathSync(join(lifeosDir, "MEMORY", "WORK"));
-    if (real === root || real.startsWith(root + "/")) return []; // already inside the workspace
-    if (!/\/MEMORY\/WORK$/.test(real)) return [];               // the target must still be a WORK dir
+    if (real === root || real.startsWith(root + sep)) return []; // already inside the workspace
+    if (!/[\\/]MEMORY[\\/]WORK$/.test(real)) return [];               // the target must still be a WORK dir
     return [real];
   } catch { return []; }
 }
@@ -401,7 +401,7 @@ function workMemoryDirs(cwd: string, lifeosDir: string): string[] {
 /** Git env vars that would make the probe report some other repo than the one at the cwd. */
 const GIT_LOCATION_ENV = ["GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_CEILING_DIRECTORIES"];
 const GIT_PROBE_TIMEOUT_MS = 5000;
-function insideOrEqual(path: string, root: string): boolean { return path === root || path.startsWith(root + "/"); }
+function insideOrEqual(path: string, root: string): boolean { return path === root || path.startsWith(root + sep); }
 /** True when `dir` touches a protected root: equals it, sits inside it, or contains it. */
 function touchesProtected(dir: string, protectedRoots: string[]): boolean {
   return protectedRoots.some(root => insideOrEqual(dir, root) || insideOrEqual(root, dir));
@@ -464,7 +464,7 @@ function probeWorktreeGitDirs(cwd: string, protectedRoots: string[]): string[] {
   for (const [name, required] of [["objects", true], ["refs", true], ["logs", false]] as const) {
     const real = realOrNull(join(common, name));
     if (real === null) { if (required) return []; continue; }
-    if (!real.startsWith(common + "/")) return []; // a subdir symlinked out of the repo: refuse the whole grant
+    if (!real.startsWith(common + sep)) return []; // a subdir symlinked out of the repo: refuse the whole grant
     if (!statSync(real).isDirectory()) return [];
     granted.push(real);
   }

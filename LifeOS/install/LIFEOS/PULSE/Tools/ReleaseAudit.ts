@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { readdirSync, statSync, readFileSync, existsSync, openSync, readSync, closeSync } from "node:fs";
-import { resolve, join, relative, extname } from "node:path";
+import { resolve, join, relative, extname, sep } from "node:path";
 import { homedir } from "node:os";
 import { parseFrontmatter } from "../lib/frontmatter";
 import { MODULE_DEFAULTS, LEGACY_SECTION_KEYS } from "../lib/modules";
@@ -155,7 +155,7 @@ function auditShippedPulseTemplate(rel: string, content: string): void {
 }
 
 for (const file of files) {
-  const rel = relative(STAGING, file);
+  const rel = relative(STAGING, file).split(sep).join("/");
 
   if (/(?:^|\/)LIFEOS\/PULSE\/PULSE\.toml$/.test(rel.replace(/^install\//, ""))) {
     auditShippedPulseTemplate(rel, readFileSync(file, "utf8"));

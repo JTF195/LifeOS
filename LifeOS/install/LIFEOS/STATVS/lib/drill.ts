@@ -23,7 +23,7 @@
 import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { invariant } from "../../TOOLS/Invariant";
 import { append, counters, scan, statvsDir } from "./record";
 import type { Counters } from "./types";
@@ -70,7 +70,7 @@ export interface DrillOptions {
 
 function copyRecord(src: string, dst: string): void {
   const s = resolve(src), d = resolve(dst);
-  invariant(d !== s && !d.startsWith(s + "/") && !s.startsWith(d + "/"), "the drill copy must never overlap the record it copies");
+  invariant(d !== s && !d.startsWith(s + sep) && !s.startsWith(d + sep), "the drill copy must never overlap the record it copies");
   if (!existsSync(src)) { mkdirSync(dst, { recursive: true }); return; }
   try {
     execFileSync("cp", ["-c", "-R", src, dst], { stdio: "ignore" });

@@ -20,7 +20,7 @@
  */
 
 import { existsSync, closeSync, openSync, readFileSync, readSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { getClaudeDir } from "./Paths";
 
 // ── types ───────────────────────────────────────────────────────────────────
@@ -417,7 +417,7 @@ export function readWorkflowView(opts: ReadOptions): Model {
 
     // ISA binding: only the launch args' `isa` path links a run to its ISA (F4).
     const argIsa = args ? str(args.isa) : null;
-    const argIsaPath = argIsa ? (argIsa.startsWith("/") ? argIsa : join(root, argIsa)) : null;
+    const argIsaPath = argIsa ? (isAbsolute(argIsa) ? argIsa : join(root, argIsa)) : null;
     const argRead = argIsaPath ? readIsa(argIsaPath) : null;
     const argsLinked = !!argIsa && !!argRead;
     // A lane's `feature` is a Feature id (`F<n>`); any other string is dropped, so a lane id is never free text.

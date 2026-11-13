@@ -761,9 +761,9 @@ export function videoSwitchOffAllowance(intent: string | null): Allowance | null
 const CODE_ROOT = resolve(import.meta.dir, "..", "..", "..");
 /** An intent path, absolute or under a `~/.claude/` prefix or relative, as a path relative to ~/.claude; null when it is outside it. */
 export function intentRelPath(p: string): string | null {
-  let s = p.trim();
+  let s = p.trim().replace(/\\/g, "/"); // native paths use backslashes on Windows; the result is "/"-separated like the allowlist keys
   if (s.startsWith("~/.claude/")) return s.slice("~/.claude/".length);
-  for (const root of [CODE_ROOT, getClaudeDir()]) if (s.startsWith(root + "/")) return s.slice(root.length + 1);
+  for (const root of [CODE_ROOT, getClaudeDir()].map((r) => r.replace(/\\/g, "/"))) if (s.startsWith(root + "/")) return s.slice(root.length + 1);
   if (isAbsolute(s)) return null;
   s = s.replace(/^\.\//, "");
   return s.startsWith("../") ? null : s;

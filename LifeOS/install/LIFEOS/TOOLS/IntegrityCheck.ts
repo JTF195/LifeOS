@@ -40,7 +40,7 @@
 import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync, appendFileSync, lstatSync, readlinkSync, realpathSync, cpSync, mkdtempSync, rmSync, type Dirent } from 'fs';
 import { tmpdir } from 'os';
 import { assessHooksAlive } from "./HooksAlive";
-import { join, dirname, relative, resolve } from 'path';
+import { join, dirname, relative, resolve, sep } from 'path';
 import { execFileSync, spawnSync } from 'child_process';
 import { createHash } from 'crypto';
 import { findRuleDuplicates } from './lib/rule-duplication';
@@ -1167,7 +1167,7 @@ function checkSymlinkLoops(): void {
         let tst; try { tst = statSync(target); } catch { continue; }
         if (!tst.isDirectory()) continue;
         const parent = realpathSync(dir);
-        if (parent === target || (parent + '/').startsWith(target + '/')) {
+        if (parent === target || (parent + sep).startsWith(target + sep)) {
           findings.push({ detail: `${abs} -> ${readlinkSync(abs)} resolves to its own ancestor ${target} — a symlink loop; remove it (bun test discovery follows it until EMFILE)`, blocking: true });
         }
         continue; // never descend through a link: the real tree is reached from its own root

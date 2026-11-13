@@ -33,7 +33,7 @@ const TAILS: Array<[string, string]> = [
 /** The doctrine label for a path, or null when the file is not doctrine. */
 export function doctrineLabel(path: string): string | null {
   if (!path) return null;
-  const p = path.replace(/\/+$/, "");
+  const p = path.replace(/\\/g, "/").replace(/\/+$/, ""); // tool_input.file_path is native (backslashes on Windows)
   for (const [tail, label] of TAILS) if (p.endsWith("/" + tail)) return label;
   const algo = /\/LIFEOS\/ALGORITHM\/(v[\d.]+\.md|LATEST)$/.exec(p);
   if (algo) return `ALGORITHM ${algo[1].replace(/\.md$/, "")}`;

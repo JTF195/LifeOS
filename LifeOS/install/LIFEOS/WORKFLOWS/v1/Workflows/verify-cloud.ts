@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { mkdtemp, writeFile, rm, realpath } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { invariant } from '../../../TOOLS/Invariant';
 
@@ -10,7 +10,7 @@ export async function verifyCloud(binary: string): Promise<void> {
   if (!build.success) throw new Error(build.logs.map(String).join('\n'));
   const base = await realpath(tmpdir());
   const dir = await mkdtemp(join(base, 'arbol-cloud-'));
-  invariant((await realpath(dir)).startsWith(base + '/'), 'probe directory must belong to temporary root');
+  invariant((await realpath(dir)).startsWith(base + sep), 'probe directory must belong to temporary root');
   try {
     invariant(build.outputs.length === 1, 'cloud probe must bundle into one module');
     await writeFile(join(dir, 'probe.js'), await build.outputs[0].text());
@@ -25,7 +25,7 @@ const config :Workerd.Config = (
     const child = Bun.spawn([resolve(binary), 'test', join(dir, 'probe.capnp'), 'test'], { stdout: 'inherit', stderr: 'inherit' });
     if (await child.exited !== 0) throw new Error('workerd probe failed');
   } finally {
-    invariant((await realpath(dir)).startsWith(base + '/arbol-cloud-'), 'cleanup only owns its temporary directory');
+    invariant((await realpath(dir)).startsWith(base + sep + 'arbol-cloud-'), 'cleanup only owns its temporary directory');
     await rm(dir, { recursive: true });
   }
 }

@@ -93,8 +93,12 @@ export function parseAppConfig(raw: unknown): AppConfig {
 
 /** Path-prefix test on a segment boundary: `~/a/b` covers `~/a/b` and `~/a/b/c`, never `~/a/bc`. */
 export function underPath(path: string, prefix: string): boolean {
-  const p = prefix.length > 1 && prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
-  return path === p || path.startsWith(`${p}/`);
+  // definedIn is "~" + a native path, so on win32 it carries backslashes; compare in forward-slash form.
+  const fwd = (s: string) => s.replace(/\\/g, "/");
+  const pre = fwd(prefix);
+  const p = pre.length > 1 && pre.endsWith("/") ? pre.slice(0, -1) : pre;
+  const target = fwd(path);
+  return target === p || target.startsWith(`${p}/`);
 }
 
 /** The apps one record serves, in config order, each at most once. */
