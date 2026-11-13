@@ -110,7 +110,7 @@ export function detectOS(): OsInfo {
 }
 
 export function detectTool(name: string, versionCmd: string): ToolInfo {
-  const path = tryExec(`command -v ${name}`);
+  const path = tryExec(process.platform === "win32" ? `where ${name}` : `command -v ${name}`)?.split(/\r?\n/)[0];
   if (!path) return { installed: false };
   const out = tryExec(versionCmd);
   const m = out?.match(/(\d+\.\d+[.\d]*)/);
@@ -134,7 +134,7 @@ export function detectHarness(home: string): HarnessInfo {
     { name: "cursor", root: join(home, ".cursor"), skills: "skills", bin: "cursor" },
     { name: "openclaw", root: join(home, ".openclaw"), skills: "skills", bin: "openclaw" },
   ];
-  const hasBin = (c: (typeof candidates)[number]) => !!tryExec(`command -v ${c.bin}`);
+  const hasBin = (c: (typeof candidates)[number]) => !!tryExec(process.platform === "win32" ? `where ${c.bin}` : `command -v ${c.bin}`);
   const info = (c: (typeof candidates)[number], confidence: HarnessInfo["confidence"]): HarnessInfo => ({
     name: c.name,
     configRoot: c.root,
@@ -1067,7 +1067,7 @@ export function initConfigRootRepo(configRoot: string): UserRepoResult {
 function initLocalRepo(path: string, seedGitignore: string, commitMessage: string): UserRepoResult {
   if (!existsSync(path)) return { action: "skipped", path, reason: "directory does not exist", gitignore: "not-written" };
 
-  if (!tryExec("command -v git")) {
+  if (!tryExec(process.platform === "win32" ? "where git" : "command -v git")) {
     // Non-fatal by contract: the boundary is the symlinks, and those are already
     // established. Record the degradation and let the install finish.
     return { action: "skipped", path, reason: "git not found on PATH", gitignore: "not-written" };

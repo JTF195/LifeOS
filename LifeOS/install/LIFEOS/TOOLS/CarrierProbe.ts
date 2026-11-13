@@ -161,7 +161,7 @@ function runChild(): Promise<{ envelope: Record<string, unknown> | null; raw: st
  * (projects/<slug>/<session>/subagents/agent-*.jsonl) — the evidence class the
  * manual probes established. Assistant-message `message.model` is what RAN. */
 function sidechainModels(sessionId: string): string[] {
-  const slug = CLAUDE_DIR.replace(/[/.]/g, "-");
+  const slug = CLAUDE_DIR.replace(/[\\/:.]/g, "-");
   const dir = join(CLAUDE_DIR, "projects", slug, sessionId, "subagents");
   if (!existsSync(dir)) return [];
   const models = new Set<string>();

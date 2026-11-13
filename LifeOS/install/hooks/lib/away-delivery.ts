@@ -99,6 +99,7 @@ const TIMED_OUT = Symbol("timed out");
  * otherwise each file uploaded through share with its link, plus any that were held back and why.
  */
 export async function awayDelivery(paths: string[], deps: AwayDeps = {}): Promise<string | null> {
+  if (process.platform !== "darwin") return null; // presence is sensed only on macOS
   const unique = [...new Set(paths)];
   if (unique.length === 0) return null;
   const p = (deps.presence ?? livePresence)();

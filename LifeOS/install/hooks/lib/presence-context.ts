@@ -28,7 +28,7 @@ export function presenceBlock(r: Rec): string | null {
   const reach = (r.reach ?? []).map((x) => `- ${x.channel} for ${x.for}: ${x.url ? `${x.url} — ` : ""}${x.how}`).join("\n");
   return [
     "<principal-reach>",
-    `📍 {{PRINCIPAL_NAME}} is NOT at this Mac. On: ${device}. Where: ${where}.`,
+    `📍 Jason is NOT at this Mac. On: ${device}. Where: ${where}.`,
     "He cannot see this Mac's screen, the Interceptor test Chrome window, a local file, or anything opened here.",
     "Anything he must look at, click, approve or sign in to goes to him as something he can open where he is:",
     reach || "- share for files: upload through the share service and put the link in the answer",
@@ -40,5 +40,7 @@ export function presenceBlock(r: Rec): string | null {
 
 /** The live block, or null (at this Mac, or any failure). */
 export function presenceContext(): string | null {
+  // Presence is sensed only on macOS; elsewhere the device reads "unknown" and would claim the principal is away every turn.
+  if (process.platform !== "darwin") return null;
   try { return presenceBlock(nowRecord() as Rec); } catch { return null; }
 }

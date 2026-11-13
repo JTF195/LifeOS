@@ -480,7 +480,7 @@ async function inferenceAttempt(options: InferenceOptions, modelOverride?: strin
     // child only PATH and HOME, and then every call answers "Not logged in" (a scheduled judge call
     // can fail this way on its first run).
     // os.userInfo() reports "unknown" when USER is unset under bun, so ask the system for the uid's name.
-    if (!env.USER) env.USER = spawnSync("id", ["-un"], { encoding: "utf8" }).stdout.trim() || undefined;
+    if (!env.USER) env.USER = env.USERNAME || spawnSync("id", ["-un"], { encoding: "utf8" }).stdout?.trim() || undefined; // Windows: USERNAME, and no id on a task PATH
 
     let imagePlan: ImageInputPlan | null = null;
     if (options.imagePaths && options.imagePaths.length > 0) {
