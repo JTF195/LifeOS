@@ -59,7 +59,7 @@ import {
 import { InvariantViolation, invariant } from "./Invariant";
 import { getClaudeDir } from "./Paths"; // public issue #1665 @rogdex24, #1584 @ramazanpolat — aliased resolve sites missed by the 09-03 sweep
 import { spawnSync } from "node:child_process";
-import { basename, dirname, relative, resolve as pathResolve } from "node:path";
+import { basename, dirname, relative, resolve as pathResolve, isAbsolute, sep } from "node:path";
 import { appendEvent, archiveContent, entriesHash, foldState, readRows, sha256, type AppendResult } from "./lib/CortexLedgerCore";
 import { isInstructionShaped } from "./InjectionShapes";
 import { assertInsideUserData } from "./lib/ForeignDataCheck";
@@ -70,6 +70,18 @@ import { atomicWrite as boundaryAtomicWrite } from "./lib/Boundary";
 // ── Constants ──
 
 const CLAUDE_ROOT = getClaudeDir();
+
+/**
+ * Ledger key for a file under the config root: forward-slash, root-relative (`LIFEOS/USER/...`).
+ * One owner for the conversion; `abs.replace(CLAUDE_ROOT + "/", "")` left Windows paths absolute
+ * (backslashes never matched), so the Cortex fold missed every write (entries-drift, 2026-11-13).
+ */
+function claudeRel(abs: string): string {
+  const rel = relative(CLAUDE_ROOT, abs);
+  if (!rel || rel.startsWith("..") || isAbsolute(rel)) return abs;
+  return rel.split(sep).join("/");
+}
+
 
 const ALLOWED_FILES = new Set<string>([
   pathResolve(CLAUDE_ROOT, "LIFEOS/USER/PRINCIPAL/PRINCIPAL_MEMORY.md"),
@@ -690,7 +702,7 @@ function logRejectedWrite(
     appendEvent({
       kind: "memory/rejected",
       ts: new Date().toISOString(),
-      file: filePath.replace(CLAUDE_ROOT + "/", ""),
+      file: claudeRel(filePath),
       updated_by: options.updatedBy ?? "unknown",
       ...(options.sessionId ? { session_id: options.sessionId } : {}),
       ...(options.runId ? { run_id: options.runId } : {}),
@@ -868,7 +880,7 @@ export function adoptLive(filePath: string, opts: { updatedBy: string; sessionId
   if (!existsSync(abs)) return { ok: false, code: "EINVAL_PATH", message: `Memory file does not exist: ${abs}` };
   const result = withLock(abs, (): AdoptResult => {
     const content = readFileSync(abs, "utf8");
-    const rel = abs.replace(CLAUDE_ROOT + "/", "");
+    const rel = claudeRel(abs);
     const drift = inspectDrift(rel, content, parseMemoryContent(content).entries);
     if (drift === null) return { ok: true, adopted: false, file: rel };
     if (drift.invalid.length > 0) {
@@ -967,7 +979,7 @@ export function setEntries(
     const parsed = parseMemoryContent(content);
     const priorEntries = parsed.entries;
     const newEntries = validated.accepted;
-    const rel = abs.replace(CLAUDE_ROOT + "/", "");
+    const rel = claudeRel(abs);
 
     // Drift check (curated ⟺ folded): when an out-of-band writer changed the
     // entries region, adopt that edit as a ledger event first, so the guards
@@ -1187,7 +1199,7 @@ export function restoreContent(
   const abs = pathCheck.abs;
 
   const result = withLock(abs, () => {
-    const rel = abs.replace(CLAUDE_ROOT + "/", "");
+    const rel = claudeRel(abs);
     // A restore is recovery, not curation, but recovery content predating a redaction must not resurrect it.
     const tombstoned = tombstonedIn(parseMemoryContent(content).entries);
     if (tombstoned.length > 0) return redactedRefusal(tombstoned, "restore content");
